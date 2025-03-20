@@ -1,0 +1,80 @@
+/* Estilos para el contenedor principal y scroll */
+.app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.content-wrapper {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto; /* Permite el scroll vertical */
+  margin-left: 70px;
+  width: calc(100% - 70px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  position: relative;
+}
+
+/* Ajuste cuando la sidebar está expandida */
+.sidebar.expanded ~ .content-wrapper {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+/* Clases personalizadas para colores */
+.text-zaziderma {
+  color: #8C2475 !important;
+}
+
+.bg-zaziderma {
+  background-color: #8C2475 !important;
+}
+
+.border-zaziderma {
+  border-color: #8C2475 !important;
+}
+
+.btn-zaziderma {
+  background-color: #8C2475 !important;
+  border-color: #8C2475 !important;
+  color: white !important;
+}
+
+.btn-zaziderma:hover {
+  background-color: #7a1e64 !important;
+  border-color: #7a1e64 !important;
+}
+
+/* Estilos de transición para las tarjetas */
+.transition-hover {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Estilos responsivos adicionales */
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 0;
+  }
+  
+  .container-fluid {
+    padding: 15px !important;
+  }
+}
+
+/* Aseguramos que el cuerpo de la página no bloquee el scroll */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Evitamos double scroll */
+}
+
+#root {
+  height: 100%;
+}
