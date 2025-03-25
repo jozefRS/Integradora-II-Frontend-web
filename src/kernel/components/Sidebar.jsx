@@ -1,8 +1,6 @@
-// Sidebar.jsx
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clipboard, Users, Settings, LogOut, Menu } from 'lucide-react';
+import { Home, Clipboard, Users, Settings, LogOut, Menu, DollarSign } from 'lucide-react';
 import './Sidebar.css';
 import logo from '../../assets/image.png';
 
@@ -24,75 +22,54 @@ const Sidebar = ({ userName = "Richard", userEmail = "richard@gmail.com" }) => {
       e.preventDefault(); // Previene la navegación si la sidebar está colapsada
       return;
     }
-    // Si está expandida, permite la navegación normal
   };
 
-  // Alternativa: si prefieres manejar la navegación manualmente
   const navigateTo = (path) => {
     if (expanded) {
       navigate(path);
-    } else {
-      // Opcionalmente, puedes mostrar un tooltip o mensaje aquí
-      // indicando que debe expandir el menú primero
     }
   };
 
   return (
-    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
+    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}> 
       <div className="sidebar-header">
         <button className="menu-button" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        
         <div className="logo-container">
           <img src={logo || "/placeholder.svg"} alt="Zaziderma" className="sidebar-logo" />
           {expanded && <span className="sidebar-title">Zaziderma</span>}
         </div>
       </div>
-
       <div className="sidebar-menu">
-        {/* Opción 1: Usando onClick con handleNavigation para controlar la navegación */}
-        <Link 
-          to="/dashboard" 
-          className={`sidebar-item ${isActive('/dashboard') ? 'active' : ''}`}
-          onClick={(e) => handleNavigation(e, '/dashboard')}
-        >
+        <Link to="/dashboard" className={`sidebar-item ${isActive('/dashboard') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/dashboard')}>
           <Home size={22} />
           {expanded && <span>Dashboard</span>}
         </Link>
-        
-        <Link 
-          to="/products" 
-          className={`sidebar-item ${isActive('/products') ? 'active' : ''}`}
-          onClick={(e) => handleNavigation(e, '/products')}
-        >
+        <Link to="/products" className={`sidebar-item ${isActive('/products') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/products')}>
           <Clipboard size={22} />
           {expanded && <span>Inventario</span>}
           {!expanded && isActive('/products') && <div className="active-indicator"></div>}
         </Link>
-        
-        {/* Opción 2: Usando div con onClick para manejar la navegación manualmente */}
-        <div 
-          className={`sidebar-item ${isActive('/users') ? 'active' : ''}`} 
-          onClick={() => navigateTo('/users')}
-          style={{ cursor: 'pointer' }}
-        >
+        <Link to="/clients" className={`sidebar-item ${isActive('/clients') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/clients')}>
+        <div className="icon-container">
+          <Users size={22} className="icon-base" />
+          <DollarSign size={12} className="icon-overlay" />
+        </div>
+          {expanded && <span>Clientes</span>}
+          {!expanded && isActive('/clients') && <div className="active-indicator"></div>}
+        </Link>
+        <div className={`sidebar-item ${isActive('/users') ? 'active' : ''}`} onClick={() => navigateTo('/users')} style={{ cursor: 'pointer' }}>
           <Users size={22} />
           {expanded && <span>Usuarios</span>}
           {!expanded && isActive('/users') && <div className="active-indicator"></div>}
         </div>
-        
-        <div 
-          className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
-          onClick={() => navigateTo('/settings')}
-          style={{ cursor: 'pointer' }}
-        >
+        <div className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`} onClick={() => navigateTo('/settings')} style={{ cursor: 'pointer' }}>
           <Settings size={22} />
           {expanded && <span>Ajustes</span>}
           {!expanded && isActive('/settings') && <div className="active-indicator"></div>}
         </div>
       </div>
-
       <div className="sidebar-footer">
         {expanded ? (
           <div className="user-info">
