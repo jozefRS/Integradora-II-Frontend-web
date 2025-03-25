@@ -4,6 +4,7 @@ import '../../../assets/bootstrap/bootstrap.min.css';
 import './GestionClientes.css';
 import Sidebar from '../../../kernel/components/Sidebar';
 import RegistrarCliente from './RegistrarCliente';
+import DetallesCliente from './DetallesCliente';
 
 const GestionClientes = () => {
   const [usuarios, setUsuarios] = useState([
@@ -11,35 +12,32 @@ const GestionClientes = () => {
       id: 1,
       nombre: 'Karol Jozef',
       email: 'karoljozef@gmail.com',
-      contacto: '+52 55 1234 5678',
+      telefonos: ['+52 55 1234 5678', '+52 55 8765 4321', '+52 55 2468 1357'],
+      calle: 'Calle Falsa',
+      numero: '123',
+      colonia: 'Centro',
+      ciudad: 'Ciudad de México',
+      estado: 'CDMX',
+      codigoPostal: '12345',
+      activo: true,
       fechaAlineacion: '23/08/2023'
     },
-    {
-      id: 2,
-      nombre: 'Uziel Jahred',
-      email: 'uzieljahred@gmail.com',
-      contacto: '+52 33 9876 5432',
-      fechaAlineacion: '17/11/2023'
-    },
-    {
-      id: 3,
-      nombre: 'Derick Axel',
-      email: 'derickaxel@gmail.com',
-      contacto: '+52 81 2345 6789',
-      fechaAlineacion: '06/01/2025'
-    }
+    
   ]);
 
-  // Estado para manejar el modal de registro
   const [modalRegistrar, setModalRegistrar] = useState(false);
+  const [modalVermas, setModalVermas] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
 
-  const abrirRegistro = () => {
-    setModalRegistrar(true);
+  const abrirRegistro = () => setModalRegistrar(true);
+  const cerrarRegistro = () => setModalRegistrar(false);
+
+  const abrirVermas = (cliente) => {
+    setClienteSeleccionado(cliente);
+    setModalVermas(true);
   };
 
-  const cerrarRegistro = () => {
-    setModalRegistrar(false);
-  };
+  const cerrarVermas = () => setModalVermas(false);
 
   return (
     <div className="app-container d-flex">
@@ -72,13 +70,13 @@ const GestionClientes = () => {
                 <tr key={usuario.id}>
                   <td>{usuario.nombre}</td>
                   <td>{usuario.email}</td>
-                  <td>{usuario.contacto}</td>
+                  <td>{usuario.telefonos[0]}</td>
                   <td>{usuario.fechaAlineacion}</td>
                   <td>
                     <button className="btn btn-sm btn-light me-2">
                       <Edit size={18} />
                     </button>
-                    <button className="btn btn-sm btn-light me-2">
+                    <button className="btn btn-sm btn-light me-2" onClick={() => abrirVermas(usuario)}>
                       <Eye size={18} />
                     </button>
                     <button className="btn btn-sm btn-light">
@@ -93,7 +91,18 @@ const GestionClientes = () => {
 
         {/* Modal de Registro */}
         {modalRegistrar && (
-          <RegistrarCliente onClose={cerrarRegistro} onSubmit={(data) => console.log('Nuevo cliente:', data)} />
+          <RegistrarCliente 
+            onClose={cerrarRegistro} 
+            onSubmit={(data) => console.log('Nuevo cliente:', data)} 
+          />
+        )}
+
+        {/* Modal de Ver detalles */}
+        {modalVermas && (
+          <DetallesCliente 
+            cliente={clienteSeleccionado} 
+            onClose={cerrarVermas} 
+          />
         )}
       </div>
     </div>
