@@ -1,0 +1,216 @@
+.sidebar {
+    background-color: #B03183;
+    height: 100vh;
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.collapsed {
+    width: 70px;
+}
+
+.expanded {
+    width: 220px;
+}
+
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 15px;
+    position: relative;
+}
+
+.menu-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background-color 0.2s;
+    position: relative;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.menu-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+}
+
+.expanded .logo-container {
+    flex-direction: row;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+.sidebar-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: white;
+    padding: 5px;
+}
+
+.sidebar-title {
+    margin-left: 10px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding-top: 20px;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    transition: background-color 0.2s;
+    justify-content: center;
+    height: 60px;
+}
+
+.expanded .sidebar-item {
+    justify-content: flex-start;
+    padding-left: 20px;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item.active {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-item span {
+    margin-left: 15px;
+    font-size: 16px;
+}
+
+.active-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sidebar-footer {
+    padding: 20px 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+}
+
+.expanded .sidebar-footer {
+    justify-content: space-between;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.user-email {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Ajustes para el contenido principal */
+.catalogo-container,
+.usuarios-container {
+    padding: 30px;
+    margin-left: 70px;
+    width: calc(100% - 70px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    overflow-y: auto;
+    height: 100vh;
+    position: relative;
+}
+
+.sidebar.expanded~.catalogo-container,
+.sidebar.expanded~.usuarios-container {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+}
+
+/* Aseguramos que el contenedor principal sea scrolleable */
+.app-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+
+    .catalogo-container,
+    .usuarios-container {
+        padding: 15px;
+    }
+}
+
+.sidebar.collapsed .sidebar-item {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.sidebar.collapsed .sidebar-item:hover::after {
+    content: "Expandir menú";
+    position: absolute;
+    left: 75px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 101;
+}
+
+/* Estilo para mostrar cuál es el ítem activo en modo colapsado */
+.sidebar.collapsed .sidebar-item.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid white;
+}
