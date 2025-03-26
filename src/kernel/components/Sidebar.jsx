@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clipboard, Users, Settings, LogOut, Menu, DollarSign } from 'lucide-react';
+import { Home, Clipboard, Users, Settings, LogOut, Menu, DollarSign, ShoppingBag } from 'lucide-react';
 import './Sidebar.css';
 import logo from '../../assets/image.png';
 
@@ -50,6 +50,11 @@ const Sidebar = ({ userName = "Richard", userEmail = "richard@gmail.com" }) => {
           <Clipboard size={22} />
           {expanded && <span>Inventario</span>}
           {!expanded && isActive('/products') && <div className="active-indicator"></div>}
+        </Link>
+        <Link to="/inventario" className={`sidebar-item ${isActive('/inventario') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/inventario')}>
+          <ShoppingBag size={22} />
+          {expanded && <span>Gestion de productos</span>}
+          {!expanded && isActive('/inventario') && <div className="active-indicator"></div>}
         </Link>
         <Link to="/clients" className={`sidebar-item ${isActive('/clients') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/clients')}>
         <div className="icon-container">
