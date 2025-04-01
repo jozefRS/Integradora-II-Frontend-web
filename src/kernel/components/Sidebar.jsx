@@ -1,15 +1,24 @@
-// Sidebar.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clipboard, Users, Settings, LogOut, Menu } from 'lucide-react';
+import { Home, BookOpen, Package, Users, Settings, LogOut, Menu, DollarSign,ShoppingCart  } from 'lucide-react';
 import './Sidebar.css';
 import logo from '../../assets/image.png';
 
-const Sidebar = ({ userName = "Richard", userEmail = "richard@gmail.com" }) => {
+const Sidebar = () => {
   const [expanded, setExpanded] = useState(false);
+  const [userRole, setUserRole] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Obtener el rol y correo del usuario desde sessionStorage
+    const role = sessionStorage.getItem("rol");
+    const email = sessionStorage.getItem("userEmail");
+
+    if (role) setUserRole(role); // Establecer el rol solo si existe
+    if (email) setUserEmail(email); // Establecer el correo solo si existe
+  }, []);
 
   const toggleSidebar = () => {
     setExpanded(!expanded);
@@ -24,84 +33,102 @@ const Sidebar = ({ userName = "Richard", userEmail = "richard@gmail.com" }) => {
       e.preventDefault(); // Previene la navegación si la sidebar está colapsada
       return;
     }
-    // Si está expandida, permite la navegación normal
   };
 
-  // Alternativa: si prefieres manejar la navegación manualmente
   const navigateTo = (path) => {
     if (expanded) {
       navigate(path);
-    } else {
-      // Opcionalmente, puedes mostrar un tooltip o mensaje aquí
-      // indicando que debe expandir el menú primero
     }
   };
 
+  const handleLogout = () => {
+    // Eliminar los datos de sesión
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("rol");
+    sessionStorage.removeItem("userEmail");
+    sessionStorage.removeItem("userName");
+
+    // Redirigir al login
+    navigate("/login");
+  };
+
   return (
-    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
+    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}> 
       <div className="sidebar-header">
         <button className="menu-button" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        
         <div className="logo-container">
           <img src={logo || "/placeholder.svg"} alt="Zaziderma" className="sidebar-logo" />
           {expanded && <span className="sidebar-title">Zaziderma</span>}
         </div>
       </div>
-
       <div className="sidebar-menu">
-        {/* Opción 1: Usando onClick con handleNavigation para controlar la navegación */}
-        <Link 
-          to="/dashboard" 
-          className={`sidebar-item ${isActive('/dashboard') ? 'active' : ''}`}
-          onClick={(e) => handleNavigation(e, '/dashboard')}
-        >
-          <Home size={22} />
-          {expanded && <span>Dashboard</span>}
-        </Link>
-        
-        <Link 
-          to="/products" 
-          className={`sidebar-item ${isActive('/products') ? 'active' : ''}`}
-          onClick={(e) => handleNavigation(e, '/products')}
-        >
-          <Clipboard size={22} />
-          {expanded && <span>Inventario</span>}
-          {!expanded && isActive('/products') && <div className="active-indicator"></div>}
-        </Link>
-        
-        {/* Opción 2: Usando div con onClick para manejar la navegación manualmente */}
-        <div 
-          className={`sidebar-item ${isActive('/users') ? 'active' : ''}`} 
-          onClick={() => navigateTo('/users')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Users size={22} />
-          {expanded && <span>Usuarios</span>}
-          {!expanded && isActive('/users') && <div className="active-indicator"></div>}
-        </div>
-        
-        <div 
-          className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
-          onClick={() => navigateTo('/settings')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Settings size={22} />
-          {expanded && <span>Ajustes</span>}
-          {!expanded && isActive('/settings') && <div className="active-indicator"></div>}
-        </div>
-      </div>
+        {/* Link para Dashboard (si es Admin o Trabajador) */}
+        {userRole === "ADMIN" && (
+          <Link to="/dashboard" className={`sidebar-item ${isActive('/dashboard') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/dashboard')}>
+            <Home size={22} />
+            {expanded && <span>Dashboard</span>}
+          </Link>
+        )}
 
+        {/* Link para Catalogo (Accesible por Admin y Trabajador) */}
+        {(userRole === "ADMIN" || userRole === "TRABAJADOR") && (
+          <Link to="/catalogo" className={`sidebar-item ${isActive('/catalogo') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/catalogo')}>
+            <BookOpen size={22} />
+            {expanded && <span>Catalogo</span>}
+          </Link>
+        )}
+
+        {/* Link para Productos (Solo Admin) */}
+        {userRole === "ADMIN" && (
+          <Link to="/products" className={`sidebar-item ${isActive('/products') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/products')}>
+            <Package size={22} />
+            {expanded && <span>Productos</span>}
+          </Link>
+        )}
+
+        {/* Link para Clientes (Accesible por Admin y Trabajador) */}
+        {(userRole === "ADMIN" || userRole === "TRABAJADOR") && (
+          <Link to="/clients" className={`sidebar-item ${isActive('/clients') ? 'active' : ''}`} onClick={(e) => handleNavigation(e, '/clients')}>
+            <div className="icon-container">
+              <Users size={22} className="icon-base" />
+              <DollarSign size={12} className="icon-overlay" />
+            </div>
+            {expanded && <span>Clientes</span>}
+          </Link>
+        )}
+
+        {/* Link para Usuarios (Solo Admin) */}
+        {userRole === "ADMIN" && (
+          <div className={`sidebar-item ${isActive('/users') ? 'active' : ''}`} onClick={() => navigateTo('/users')} style={{ cursor: 'pointer' }}>
+            <Users size={22} />
+            {expanded && <span>Usuarios</span>}
+          </div>
+        )}
+        
+        {/* Link para Usuarios (Solo Admin) */}
+        {userRole === "TRABAJADOR" && (
+          <div className={`sidebar-item ${isActive('/venta') ? 'active' : ''}`} onClick={() => navigateTo('/venta')} style={{ cursor: 'pointer' }}>
+            <ShoppingCart  size={22} />
+            {expanded && <span>venta</span>}
+          </div>
+        )}
+
+      </div>
       <div className="sidebar-footer">
         {expanded ? (
           <div className="user-info">
-            <span className="user-name">{userName}</span>
-            <span className="user-email">{userEmail}</span>
+            <span className="user-email">{userEmail}</span> {/* Solo el correo */}
           </div>
         ) : (
           <LogOut size={22} />
         )}
+        {/* Botón de cerrar sesión */}
+        <button className="logout-button" onClick={handleLogout}>
+          <LogOut size={22} />
+          
+        </button>
       </div>
     </div>
   );

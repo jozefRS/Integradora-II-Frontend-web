@@ -12,16 +12,14 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  // UseEffect para borrar el token cuando el componente se desmonte o se cierre la pestaña
   useEffect(() => {
     const handleUnload = () => {
-      sessionStorage.removeItem("token"); // Borra el token al cerrar la pestaña o cambiar de página
+      sessionStorage.clear(); // Borra todo al cerrar pestaña o actualizar
     };
 
     window.addEventListener("beforeunload", handleUnload);
-    
     return () => {
-      window.removeEventListener("beforeunload", handleUnload); // Limpiar el listener al desmontar el componente
+      window.removeEventListener("beforeunload", handleUnload);
     };
   }, []);
 
@@ -37,7 +35,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !contrasena) {
       setErrors({
         email: email ? "" : "El correo electrónico es requerido",
@@ -47,28 +45,40 @@ const Login = () => {
     }
 
     try {
-      // Realizar la solicitud GET con los parámetros en la URL
-      const response = await axios.get(`http://localhost:8080/auth/login`, {
-          params: {
-              email: email,
-              contrasena: contrasena
-          },
+      // Usamos POST para enviar las credenciales
+      const response = await axios.post("http://localhost:8080/auth/login", {
+        email: email,
+        contrasena: contrasena,
       });
 
-      // Almacenar el token en sessionStorage (se elimina automáticamente al cerrar la pestaña)
-      sessionStorage.setItem("token", response.data);
+      const { token, rol, idUsuario } = response.data;
+      sessionStorage.setItem("userEmail", email); // Guarda el correo en sessionStorage
+      sessionStorage.setItem("userName", email); // Guarda el nombre de usuario en sessionStorage
+      // Guarda token y rol en sessionStorage
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("idUsuario", idUsuario); // Almacenamos el ID de usuario
+      sessionStorage.setItem("rol", rol);
 
-      // Redirigir al usuario a la página principal
-      navigate("/Products"); // Ajusta la URL de destino según tu aplicación
+      console.log("Token recibido:", token); // Para depuración
+      console.log("Rol recibido:", rol); // Para depuración 
+    console.log("ID Trabajador recibido:", idUsuario); // Para depuración    
+
+      // Redirige según el rol
+      if (rol === "ADMIN") {
+        navigate("/dashboard");
+      } else if (rol === "TRABAJADOR") {
+        navigate("/catalogo");
+      } else {
+        setErrorMessage("Rol no autorizado");
+      }
 
     } catch (error) {
       if (error.response) {
-          // Si la respuesta del servidor es con error, como 401
-          console.error("Error de autenticación:", error.response.data);
-          setErrorMessage("Credenciales incorrectas");
+        console.error("Error de autenticación:", error.response.data);
+        setErrorMessage("Credenciales incorrectas");
       } else {
-          console.error("Error de red o conexión:", error.message);
-          setErrorMessage("Hubo un error en la conexión");
+        console.error("Error de red:", error.message);
+        setErrorMessage("Error de conexión con el servidor");
       }
     }
   };
@@ -77,12 +87,11 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card shadow">
         <div className="login-image-section">
-          <img src={imagenLogin || "/placeholder.svg"} alt="Login" className="login-background-image" />
+          <img src={imagenLogin} alt="Login" className="login-background-image" />
         </div>
         <div className="login-form-section">
           <div className="form-container">
-            <img src={logo || "/placeholder.svg"} alt="Logo" className="login-logo" />
-            
+            <img src={logo} alt="Logo" className="login-logo" />
             <div className="divider"></div>
 
             {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
@@ -108,12 +117,11 @@ const Login = () => {
                 />
                 {errors.password && <div className="invalid-feedback">{errors.password}</div>}
               </div>
-              
+
               <div className="divider mb-4"></div>
-              
               <button type="submit" className="btn w-100 login-button">Iniciar</button>
             </form>
-            
+
             <p className="mt-4 text-center forgot-password">
               ¿Olvidaste tu contraseña? <a href="#" className="text-recover">Recuperar</a>
             </p>

@@ -211,6 +211,20 @@
 
 /* Estilo para mostrar cuál es el ítem activo en modo colapsado */
 .sidebar.collapsed .sidebar-item.active {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
     border-left: 3px solid white;
 }
+.logout-button {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    color: #ffffff;
+  }
+  
+  .logout-button:hover {
+    background-color: #B03183;
+  }
+  

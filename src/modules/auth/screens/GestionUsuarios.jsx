@@ -5,10 +5,9 @@ import './GestionUsuarios.css';
 import Sidebar from '../../../kernel/components/Sidebar';
 import axios from "axios";
 
-
-
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
+
   useEffect(() => {
     const fetchUsuarios = async () => {
       const token = sessionStorage.getItem('token');
@@ -18,11 +17,9 @@ const GestionUsuarios = () => {
             Authorization: token ? `Bearer ${token}` : '',
           },
         });
-         // Verificar la respuesta del servidor
-    console.log('Respuesta del servidor:', response);
-    const usuariosData = response.data || []; // Asegúrate de acceder a la propiedad correcta
-
-        setUsuarios(usuariosData);
+        // Filtrar los usuarios para mostrar solo los que son "TRABAJADOR"
+        const trabajadores = response.data.filter(usuario => usuario.rol === "TRABAJADOR");
+        setUsuarios(trabajadores);
       } catch (error) {
         console.error('Error al obtener los usuarios:', error);
         setUsuarios([]);
@@ -30,9 +27,6 @@ const GestionUsuarios = () => {
     };
     fetchUsuarios();
   }, []);
-
- 
-
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -45,14 +39,12 @@ const GestionUsuarios = () => {
     nombreCompleto: '',
     username: '',
     email: '',
-    
   });
 
   const [touched, setTouched] = useState({
     nombreCompleto: false,
     username: false,
     email: false,
-    
   });
 
   const [formValid, setFormValid] = useState(false);
@@ -145,11 +137,11 @@ const GestionUsuarios = () => {
     });
     setErrors(newErrors);
   
-    const hasErrors = Object.values(newErrors).some(error => error !== '');
+    const hasErrors = Object.values(newErrors).some(error => error !== '' );
   
     if (!hasErrors) {
       try {
-        const token = sessionStorage.getItem('token'); // Obtener el token de sesión si es necesario
+        const token = sessionStorage.getItem('token');
         const response = await axios.post(
           'http://localhost:8080/api/usuario/registrar-trabajador',
           formData,
@@ -161,8 +153,6 @@ const GestionUsuarios = () => {
           }
         );
   
-        console.log('Usuario registrado con éxito:', response.data);
-        
         // Actualizar la lista de usuarios después del registro
         setUsuarios([...usuarios, response.data]);
   
@@ -172,8 +162,6 @@ const GestionUsuarios = () => {
           nombreCompleto: '',
           username: '',
           email: '',
-          password: '',
-          confirmPassword: '',
         });
         setErrors({
           nombreCompleto: '',
@@ -191,7 +179,6 @@ const GestionUsuarios = () => {
       }
     }
   };
-  
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -199,19 +186,16 @@ const GestionUsuarios = () => {
       nombreCompleto: '',
       username: '',
       email: '',
-      
     });
     setErrors({
       nombreCompleto: '',
       username: '',
       email: '',
-      
     });
     setTouched({
       nombreCompleto: false,
       username: false,
       email: false,
-      
     });
   };
 
@@ -220,7 +204,7 @@ const GestionUsuarios = () => {
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
       <div className="usuarios-container p-4 ms-auto w-100">
         <div className="usuarios-header mb-4">
-          <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión de usuarios</h1>
+          <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión De Usuarios</h1>
           <div className="usuarios-divider"></div>
         </div>
 

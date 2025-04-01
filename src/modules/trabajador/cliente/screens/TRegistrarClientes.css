@@ -1,0 +1,165 @@
+/* Estilos para el modal de registro de cliente */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-container {
+    background: white;
+    width: 50%;
+    max-width: 700px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-title {
+    text-align: center;
+    color: #8C2475;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 250px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #8C2475;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 1px solid #8C2475;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6a1b52;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.telefono-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.telefono-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.telefono-item input {
+    flex: none;
+    width: 300px; /* Se mantiene un tamaño fijo para los inputs */
+    max-width: 300px;
+    min-width: 300px;
+}
+
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    min-width: 100px; /* Mantiene un tamaño uniforme */
+    text-align: center;
+}
+
+.btn-remove:hover {
+    background: #b52b3c;
+}
+
+.btn-add {
+    background: #b5b5b5;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    min-width: 200px; /* Mantiene el botón de agregar teléfono siempre del mismo tamaño */
+    text-align: center;
+}
+
+.btn-add:hover {
+    background: #8a8a8a;
+}
+
+.form-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 10px; /* Espacio entre los botones */
+    margin-top: 15px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    border: none;
+    margin: 5px;
+}
+
+.btn-primary {
+    background: #8C2475;
+    color: white;
+}
+
+.btn-secondary {
+    background: #b5b5b5;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .modal-container {
+        width: 90%;
+    }
+}
