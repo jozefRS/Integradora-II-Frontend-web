@@ -269,4 +269,21 @@
     }
   }
   
+  .status-badge {
+    padding: 5px 10px;
+    border-radius: 3px;
+    color: white;
+  }
+  
+  .out-of-stock {
+    background-color: #e74c3c;  /* Rojo para agotado */
+  }
+  
+  .low-stock {
+    background-color: #f39c12;  /* Amarillo para por agotarse */
+  }
+  
+  .available {
+    background-color: #2ecc71;  /* Verde para disponible */
+  }
   

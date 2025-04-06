@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, Package, Users, Settings, LogOut, Menu, DollarSign,ShoppingCart  } from 'lucide-react';
+import { Home, BookOpen, Package, Users, Settings, LogOut, Menu, DollarSign, ShoppingCart } from 'lucide-react';
 import './Sidebar.css';
 import logo from '../../assets/image.png';
 
 const Sidebar = () => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false); // Mantener el estado de la expansión
   const [userRole, setUserRole] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const location = useLocation();
@@ -21,7 +21,7 @@ const Sidebar = () => {
   }, []);
 
   const toggleSidebar = () => {
-    setExpanded(!expanded);
+    setExpanded(!expanded); // Alternar entre expandido y colapsado
   };
 
   const isActive = (path) => {
@@ -53,7 +53,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`}> 
+    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`} onClick={toggleSidebar}> {/* Agregado onClick aquí */}
       <div className="sidebar-header">
         <button className="menu-button" onClick={toggleSidebar}>
           <Menu size={24} />
@@ -106,15 +106,22 @@ const Sidebar = () => {
             {expanded && <span>Usuarios</span>}
           </div>
         )}
-        
-        {/* Link para Usuarios (Solo Admin) */}
+
+        {/* Link para Venta (Solo Trabajador) */}
         {userRole === "TRABAJADOR" && (
           <div className={`sidebar-item ${isActive('/venta') ? 'active' : ''}`} onClick={() => navigateTo('/venta')} style={{ cursor: 'pointer' }}>
-            <ShoppingCart  size={22} />
-            {expanded && <span>venta</span>}
+            <ShoppingCart size={22} />
+            {expanded && <span>Venta</span>}
           </div>
         )}
 
+        {/* Link para Venta (Solo Trabajador) */}
+        {userRole === "ADMIN" && (
+          <div className={`sidebar-item ${isActive('/ventas') ? 'active' : ''}`} onClick={() => navigateTo('/ventas')} style={{ cursor: 'pointer' }}>
+            <ShoppingCart size={22} />
+            {expanded && <span>Ventas</span>}
+          </div>
+        )}
       </div>
       <div className="sidebar-footer">
         {expanded ? (
@@ -127,7 +134,6 @@ const Sidebar = () => {
         {/* Botón de cerrar sesión */}
         <button className="logout-button" onClick={handleLogout}>
           <LogOut size={22} />
-          
         </button>
       </div>
     </div>

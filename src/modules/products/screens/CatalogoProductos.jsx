@@ -6,45 +6,97 @@ import '../screens/CatalogoProductos.css'; // Asegúrate de importar después de
 
 const CatalogoProductos = () => {
   const [productos, setProductos] = useState([]);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [subcategorias, setSubcategorias] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [productosPorPagina] = useState(9); // Ajusta la cantidad de productos por página
 
+  const getToken = () => sessionStorage.getItem('token');
+
+  // Obtener categorías
   useEffect(() => {
-    // Función para obtener los productos desde el backend
-    const fetchProductos = async () => {
-      const token = sessionStorage.getItem('token'); // Obtener el token de sessionStorage
+    const token = getToken();
+    axios.get('http://localhost:8080/api/categoria', {
+      headers: { Authorization: token ? `Bearer ${token}` : '' }
+    })
+      .then(response => setCategorias(response.data?.body?.data))
+      .catch(error => console.error('Error al obtener categorías:', error));
+  }, []);
 
-      try {
-        const response = await axios.get('http://localhost:8080/api/producto', {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '', // Añadir el token si está disponible
-          }
-        });
+  // Obtener todos los productos al cargar
+  useEffect(() => {
+    const token = getToken();
+    axios.get('http://localhost:8080/api/producto', {
+      headers: { Authorization: token ? `Bearer ${token}` : '' }
+    })
+      .then(response => {
+        setProductos(response.data?.body?.data || []);
+        setProductosFiltrados(response.data?.body?.data || []);  // Inicializamos los productos filtrados
+      })
+      .catch(error => console.error('Error al obtener los productos:', error));
+  }, []);
 
-        console.log("Datos recibidos:", response.data); // Para depuración
+  // Obtener las subcategorías cuando se selecciona una categoría
+  useEffect(() => {
+    if (categoriaSeleccionada) {
+      const token = getToken();
+      axios.get(`http://localhost:8080/api/categoria/${categoriaSeleccionada}/subcategorias`, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' }
+      })
+        .then(response => setSubcategorias(response.data || []))
+        .catch(error => console.error('Error al obtener las subcategorías:', error));
+    } else {
+      setSubcategorias([]);  // Limpiar subcategorías si no hay categoría seleccionada
+    }
+  }, [categoriaSeleccionada]);
 
-        // Extraer el array de productos correctamente
-        const productosData = response.data?.body?.data || []; // Asegúrate de acceder a la propiedad correcta
-        setProductos(productosData); // Actualiza el estado con los productos
-      } catch (error) {
-        console.error('Error al obtener los productos', error);
-        setProductos([]); // Si ocurre un error, asigna un array vacío
-      }
-    };
+  // Filtrar productos cada vez que cambia la búsqueda, categoría, subcategoría o la página
+  useEffect(() => {
+    const productosFiltrados = productos.filter(producto => {
+      // Validar que la categoría seleccionada coincida con el producto
+      const categoriaCoincide = categoriaSeleccionada 
+        ? producto.idCategoria && producto.idCategoria === categoriaSeleccionada 
+        : true;
+      
+      // Validar que la subcategoría seleccionada coincida con el producto
+      const subcategoriaCoincide = subcategoriaSeleccionada 
+        ? producto.idSubcategoria && producto.idSubcategoria === subcategoriaSeleccionada 
+        : true;
 
-    fetchProductos(); // Llama a la función para obtener los productos
+      // Validar que el nombre del producto coincida con la búsqueda
+      const nombreCoincide = producto.nombre.toLowerCase().includes(busqueda.toLowerCase());
 
-    // Importamos el JS de Bootstrap dinámicamente
-    const bootstrapScript = document.createElement('script');
-    bootstrapScript.src = '../../../assets/bootstrap/bootstrap.bundle.min.js';
-    bootstrapScript.async = true;
-    document.body.appendChild(bootstrapScript);
+      return nombreCoincide && categoriaCoincide && subcategoriaCoincide;
+    });
 
-    // Limpieza al desmontar el componente
-    return () => {
-      if (document.body.contains(bootstrapScript)) {
-        document.body.removeChild(bootstrapScript);
-      }
-    };
-  }, []); // El array vacío asegura que la solicitud se haga solo una vez al montar el componente
+    setProductosFiltrados(productosFiltrados);
+  }, [busqueda, categoriaSeleccionada, subcategoriaSeleccionada, productos]);
+
+  // Manejar el cambio de la categoría seleccionada
+  const handleCategoriaChange = (e) => {
+    const categoriaId = e.target.value;
+    setCategoriaSeleccionada(categoriaId);
+    setSubcategoriaSeleccionada('');  // Resetear la subcategoría seleccionada
+  };
+
+  // Manejar el cambio de la subcategoría seleccionada
+  const handleSubcategoriaChange = (e) => {
+    setSubcategoriaSeleccionada(e.target.value);
+  };
+
+  // Manejar la búsqueda por nombre
+  const handleBusquedaChange = (e) => {
+    setBusqueda(e.target.value);
+  };
+
+  // Manejar el cambio de página
+  const handlePageChange = (newPage) => {
+    setPaginaActual(newPage); 
+  };
 
   return (
     <div className="app-wrapper d-flex">
@@ -61,14 +113,55 @@ const CatalogoProductos = () => {
             </div>
           </div>
 
+          {/* Filtros por categoría, subcategoría y búsqueda */}
+          <div className="row mb-4">
+            <div className="col-4">
+              <select 
+                className="form-select" 
+                value={categoriaSeleccionada} 
+                onChange={handleCategoriaChange}
+              >
+                <option value="">Seleccionar categoría</option>
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-4">
+              <select 
+                className="form-select" 
+                value={subcategoriaSeleccionada} 
+                onChange={handleSubcategoriaChange}
+                disabled={!categoriaSeleccionada}
+              >
+                <option value="">Seleccionar subcategoría</option>
+                {subcategorias.map(subcategoria => (
+                  <option key={subcategoria.id} value={subcategoria.id}>{subcategoria.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-4">
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Buscar por nombre..." 
+                value={busqueda}
+                onChange={handleBusquedaChange}
+              />
+            </div>
+          </div>
+
+          {/* Mostrar los productos filtrados */}
           <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {productos.length > 0 ? (
-              productos.map((producto) => (
+            {productosFiltrados.length > 0 ? (
+              productosFiltrados.slice((paginaActual - 1) * productosPorPagina, paginaActual * productosPorPagina).map((producto) => (
                 <div className="col" key={producto.id}>
                   <div className="card h-100 shadow-sm transition-hover">
                     <div className="bg-light d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
                       <img 
-                        src={producto.imagen || "/placeholder.svg"} 
+                        src={producto.imagen ? `http://localhost:8080/images${producto.imagen}` : "/placeholder.svg"}
                         alt={producto.nombre} 
                         className="card-img-top p-3" 
                         style={{ maxHeight: '100%', objectFit: 'contain' }} 
@@ -77,12 +170,14 @@ const CatalogoProductos = () => {
                     <div className="card-body d-flex flex-column">
                       <h5 className="card-title fw-bold">{producto.nombre}</h5>
                       <p className="card-text text-muted small">{producto.descripcion}</p>
-                      <p className="card-text fw-bold fs-5">${producto.precio.toFixed(2)}</p>
+                      <p className="card-text fw-bold fs-5">
+                        ${producto.precio ? producto.precio.toFixed(2) : 'Sin precio'}
+                      </p>
                       <div className="mb-3">
                         <span className={`badge ${producto.estado ? 'bg-zaziderma' : 'bg-secondary'}`} style={{ 
                           borderRadius: '20px',
                           padding: '5px 15px'
-                        }}>
+                        }} >
                           {producto.estado ? 'Activo' : 'Inactivo'}
                         </span>
                       </div>
@@ -97,6 +192,26 @@ const CatalogoProductos = () => {
               </div>
             )}
           </div>
+
+          {/* Paginación */}
+          <div className="d-flex justify-content-center mt-4">
+            <button 
+              className="btn btn-secondary mx-2" 
+              onClick={() => handlePageChange(paginaActual - 1)} 
+              disabled={paginaActual === 1}
+            >
+              Anterior
+            </button>
+            <span> Página {paginaActual} </span>
+            <button 
+              className="btn btn-secondary mx-2" 
+              onClick={() => handlePageChange(paginaActual + 1)}
+              disabled={productosFiltrados.length < productosPorPagina}
+            >
+              Siguiente
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

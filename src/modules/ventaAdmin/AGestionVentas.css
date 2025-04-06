@@ -405,14 +405,3 @@
     border-style: dashed !important;
     border-color: #f8e1f4 !important;
   }
-  .gestion-ventas-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.content-container {
-    flex: 1;
-    overflow-y: auto;  /* Permite el desplazamiento vertical */
-    padding: 20px;
-}

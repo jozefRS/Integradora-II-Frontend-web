@@ -8,6 +8,8 @@ import GestionClientes from '../modules/clients/screens/GestionClientes';
 import Dashboard from '../modules/dashboard/screens/Dashboard';
 import GestionProductos from '../modules/products/screens/GestionProductos';
 import GestionVentas from '../modules/trabajador/venta/GestionVentas';
+import AGestionVentas from '../modules/ventaAdmin/AGestionVentas';
+
 const AppRouter = () => {
   return (
     <BrowserRouter>
@@ -61,6 +63,14 @@ const AppRouter = () => {
           element={
             <ProtectedRoute allowedRoles={'TRABAJADOR'}>
               <GestionVentas />
+            </ProtectedRoute>
+          }
+        />
+         <Route 
+          path="/ventas" 
+          element={
+            <ProtectedRoute allowedRoles={'ADMIN'}>
+              <AGestionVentas />
             </ProtectedRoute>
           }
         />
