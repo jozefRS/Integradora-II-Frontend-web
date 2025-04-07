@@ -1,27 +1,40 @@
 import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import * as Yup from 'yup';
 import './RegistrarCliente.css';
 
-const schema = yup.object().shape({
-  nombre: yup.string().required('El nombre es obligatorio'),
-  apellidoPaterno: yup.string().required('El apellido paterno es obligatorio'),
-  apellidoMaterno: yup.string().required('El apellido materno es obligatorio'),
-  email: yup.string().email('Correo inválido').required('El correo es obligatorio'),
-  telefonos: yup.array()
-    .of(yup.string().matches(/^\+?[0-9 ]+$/, 'Número inválido').required('El teléfono es obligatorio'))
-    .min(1, 'Debe haber al menos un número de teléfono'),
-  calle: yup.string().required('La calle es obligatoria'),
-  numero: yup.string().required('El número es obligatorio'),
-  colonia: yup.string().required('La colonia es obligatoria'),
-  ciudad: yup.string().required('La ciudad es obligatoria'),
-  estado: yup.string().required('El estado es obligatorio'),
-  codigoPostal: yup.string().matches(/^\d{5}$/, 'Código postal inválido').required('El código postal es obligatorio'),
+import {
+  nombreValidation,
+  apellidoPaternoValidation,
+  apellidoMaternoValidation,
+  emailValidation,
+  calleValidation,
+  numeroDireccionValidation,
+  coloniaValidation,
+  ciudadValidation,
+  estadoValidation,
+  codigoPostalValidation,
+  telefonosArrayValidation,
+} from '../../../utils/validationForm';
+
+
+const schema = Yup.object().shape({
+  nombre: nombreValidation,
+  apellidoPaterno: apellidoPaternoValidation,
+  apellidoMaterno: apellidoMaternoValidation,
+  email: emailValidation,
+  telefonos: telefonosArrayValidation,
+  calle: calleValidation,
+  numero: numeroDireccionValidation,
+  colonia: coloniaValidation,
+  ciudad: ciudadValidation,
+  estado: estadoValidation,
+  codigoPostal: codigoPostalValidation,
 });
 
 const RegistrarCliente = ({ onClose, onSubmit }) => {
-  const { register, handleSubmit, control, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors }, watch } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       telefonos: ['']
@@ -65,17 +78,41 @@ const RegistrarCliente = ({ onClose, onSubmit }) => {
 
           {/* Teléfonos */}
           <div className="form-row">
-            {fields.map((item, index) => (
-              <div className="form-group" key={item.id}>
-                <input type="text" placeholder={`Teléfono ${index + 1}`} {...register(`telefonos.${index}`)} />
-                <p className="error-message">{errors.telefonos?.[index]?.message}</p>
-                {fields.length > 1 && (
-                  <button type="button" className="btn-remove" onClick={() => remove(index)}>Eliminar</button>
-                )}
-              </div>
-            ))}
-            <button type="button" className="btn btn-secondary" onClick={() => append('')}>Agregar Teléfono</button>
+            {fields.map((item, index) => {
+              const error = errors.telefonos?.[index]?.message;
+              const value = watch(`telefonos.${index}`);
+
+              return (
+                <div className="form-group" key={item.id}>
+                  <input
+                    type="text"
+                    placeholder={`Teléfono ${index + 1}`}
+                    {...register(`telefonos.${index}`)}
+                    className={error ? 'input-error' : ''}
+                  />
+                  <p className="error-message">{error}</p>
+
+                  {fields.length > 1 && (
+                    <button type="button" className="btn-remove" onClick={() => remove(index)}>
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Mostrar errores del array */}
+            {errors.telefonos && (
+              <p className="error-message">
+                {errors.telefonos.message || errors.telefonos.root?.message}
+              </p>
+            )}
+
+            <button type="button" className="btn btn-secondary" onClick={() => append('')}>
+              Agregar Teléfono
+            </button>
           </div>
+
 
           {/* Dirección */}
           <h6 className="mt-4">Dirección</h6>

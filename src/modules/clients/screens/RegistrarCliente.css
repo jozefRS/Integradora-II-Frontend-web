@@ -95,7 +95,8 @@
 
 .telefono-item input {
     flex: none;
-    width: 300px; /* Se mantiene un tamaño fijo para los inputs */
+    width: 300px;
+    /* Se mantiene un tamaño fijo para los inputs */
     max-width: 300px;
     min-width: 300px;
 }
@@ -108,7 +109,8 @@
     padding: 8px 12px;
     border-radius: 5px;
     cursor: pointer;
-    min-width: 100px; /* Mantiene un tamaño uniforme */
+    min-width: 100px;
+    /* Mantiene un tamaño uniforme */
     text-align: center;
 }
 
@@ -123,7 +125,8 @@
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
-    min-width: 200px; /* Mantiene el botón de agregar teléfono siempre del mismo tamaño */
+    min-width: 200px;
+    /* Mantiene el botón de agregar teléfono siempre del mismo tamaño */
     text-align: center;
 }
 
@@ -134,8 +137,10 @@
 .form-actions {
     width: 100%;
     display: flex;
-    justify-content: flex-end; /* Alinea los botones a la derecha */
-    gap: 10px; /* Espacio entre los botones */
+    justify-content: flex-end;
+    /* Alinea los botones a la derecha */
+    gap: 10px;
+    /* Espacio entre los botones */
     margin-top: 15px;
 }
 
@@ -162,4 +167,22 @@
     .modal-container {
         width: 90%;
     }
+}
+
+.input-error {
+    border: 2px solid #dc3545;
+    /* rojo */
+    background-color: #ffe6e6;
+}
+
+.input-success {
+    border: 2px solid #28a745;
+    /* verde */
+    background-color: #e6ffe6;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 2px;
 }
