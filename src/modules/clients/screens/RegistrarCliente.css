@@ -95,8 +95,7 @@
 
 .telefono-item input {
     flex: none;
-    width: 300px;
-    /* Se mantiene un tamaño fijo para los inputs */
+    width: 300px; /* Se mantiene un tamaño fijo para los inputs */
     max-width: 300px;
     min-width: 300px;
 }
@@ -109,8 +108,7 @@
     padding: 8px 12px;
     border-radius: 5px;
     cursor: pointer;
-    min-width: 100px;
-    /* Mantiene un tamaño uniforme */
+    min-width: 100px; /* Mantiene un tamaño uniforme */
     text-align: center;
 }
 
@@ -125,8 +123,7 @@
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
-    min-width: 200px;
-    /* Mantiene el botón de agregar teléfono siempre del mismo tamaño */
+    min-width: 200px; /* Mantiene el botón de agregar teléfono siempre del mismo tamaño */
     text-align: center;
 }
 

@@ -106,5 +106,9 @@
   .sidebar.expanded ~ .usuarios-container {
     margin-left: 220px;
     width: calc(100% - 220px);
+<<<<<<< HEAD
   }
   
+=======
+  }
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51

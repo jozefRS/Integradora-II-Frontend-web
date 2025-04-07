@@ -1,0 +1,148 @@
+/* Estilos para el modal de registro de producto */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  
+  .modal-container {
+    background: white;
+    width: 60%;
+    max-width: 800px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-title {
+    text-align: center;
+    color: #8C2475;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .form-columns {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .form-left, .form-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+  }
+  
+  .form-group label {
+    font-weight: bold;
+    color: #8C2475;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px;
+    border: 1px solid #8C2475;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #6a1b52;
+  }
+  
+  .file-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .inline-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .inline-group button {
+    background: #8C2475;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .inline-group input {
+    text-align: center;
+    width: 60px;
+    border: 1px solid #8C2475;
+  }
+  
+  .form-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    border: none;
+  }
+  
+  .btn-primary {
+    background: #8C2475;
+    color: white;
+  }
+  
+  .btn-secondary {
+    background: #b5b5b5;
+    color: white;
+  }
+  
+  /* Estilos para mensajes de error */
+  .error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  
+  .form-group input.error,
+  .form-group select.error {
+    border: 1px solid red;
+  }

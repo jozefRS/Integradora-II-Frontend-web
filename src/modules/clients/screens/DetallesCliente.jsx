@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 
 import React from 'react';
 import './DetallesCliente.css';
 
 const TDetallesCliente = ({ cliente, onClose }) => {
+=======
+import React from 'react';
+import './DetallesCliente.css';
+
+const DetallesCliente = ({ cliente, onClose }) => {
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   if (!cliente) return null;
 
   return (

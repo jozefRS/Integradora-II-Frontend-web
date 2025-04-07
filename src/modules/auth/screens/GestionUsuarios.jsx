@@ -3,6 +3,7 @@ import { Edit } from 'lucide-react';
 import '../../../assets/bootstrap/bootstrap.min.css';
 import './GestionUsuarios.css';
 import Sidebar from '../../../kernel/components/Sidebar';
+<<<<<<< HEAD
 import axios from "axios";
 
 const GestionUsuarios = () => {
@@ -27,28 +28,82 @@ const GestionUsuarios = () => {
     };
     fetchUsuarios();
   }, []);
+=======
+
+const GestionUsuarios = () => {
+  const [usuarios, setUsuarios] = useState([
+    {
+      id: 1,
+      nombre: 'Karol Jozef',
+      email: 'karoljozef@gmail.com',
+      rol: 'Administrador',
+      activo: true
+    },
+    {
+      id: 2,
+      nombre: 'Uziel Jahred',
+      email: 'uzieljahred@gmail.com',
+      rol: 'Trabajador',
+      activo: true
+    },
+    {
+      id: 3,
+      nombre: 'Derick Axel',
+      email: 'derickaxel@gmail.com',
+      rol: 'Trabajador',
+      activo: false
+    },
+    {
+      id: 4,
+      nombre: '------',
+      email: '------',
+      rol: '------',
+      activo: false
+    }
+  ]);
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     nombreCompleto: '',
     username: '',
+<<<<<<< HEAD
     email: ''
+=======
+    email: '',
+    password: '',
+    confirmPassword: ''
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   });
 
   const [errors, setErrors] = useState({
     nombreCompleto: '',
     username: '',
     email: '',
+<<<<<<< HEAD
+=======
+    password: '',
+    confirmPassword: ''
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   });
 
   const [touched, setTouched] = useState({
     nombreCompleto: false,
     username: false,
     email: false,
+<<<<<<< HEAD
+=======
+    password: false,
+    confirmPassword: false
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   });
 
   const [formValid, setFormValid] = useState(false);
 
+<<<<<<< HEAD
+=======
+  // Validar el formulario completo cada vez que cambian los datos o errores
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   useEffect(() => {
     const isFormValid = Object.values(errors).every(error => error === '') &&
                         Object.values(formData).every(value => value.trim() !== '');
@@ -86,6 +141,36 @@ const GestionUsuarios = () => {
           errorMessage = 'Ingrese un correo electrónico válido';
         }
         break;
+<<<<<<< HEAD
+=======
+      
+      case 'password':
+        if (!value) {
+          errorMessage = 'La contraseña es requerida';
+        } else if (value.length < 8) {
+          errorMessage = 'La contraseña debe tener al menos 8 caracteres';
+        } else if (!/(?=.*[a-z])/.test(value)) {
+          errorMessage = 'La contraseña debe contener al menos una letra minúscula';
+        } else if (!/(?=.*[A-Z])/.test(value)) {
+          errorMessage = 'La contraseña debe contener al menos una letra mayúscula';
+        } else if (!/(?=.*\d)/.test(value)) {
+          errorMessage = 'La contraseña debe contener al menos un número';
+        } else if (!/(?=.*[!@#$%^&*])/.test(value)) {
+          errorMessage = 'La contraseña debe contener al menos un carácter especial (!@#$%^&*)';
+        }
+        break;
+      
+      case 'confirmPassword':
+        if (!value) {
+          errorMessage = 'Confirme su contraseña';
+        } else if (value !== formData.password) {
+          errorMessage = 'Las contraseñas no coinciden';
+        }
+        break;
+      
+      default:
+        break;
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     }
 
     return errorMessage;
@@ -98,6 +183,10 @@ const GestionUsuarios = () => {
       [name]: value
     });
     
+<<<<<<< HEAD
+=======
+    // Validar el campo si ya fue tocado
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     if (touched[name]) {
       setErrors({
         ...errors,
@@ -109,33 +198,54 @@ const GestionUsuarios = () => {
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
+<<<<<<< HEAD
+=======
+    // Marcar el campo como tocado
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     setTouched({
       ...touched,
       [name]: true
     });
     
+<<<<<<< HEAD
+=======
+    // Validar el campo
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     setErrors({
       ...errors,
       [name]: validateField(name, value)
     });
   };
 
+<<<<<<< HEAD
   const handleSubmit = async (e) => {
     e.preventDefault();
   
     // Marcar todos los campos como "touched" para activar la validación
+=======
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Marcar todos los campos como tocados
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     const allTouched = Object.keys(touched).reduce((acc, field) => ({
       ...acc,
       [field]: true
     }), {});
     setTouched(allTouched);
+<<<<<<< HEAD
   
     // Validar los campos antes de enviar
+=======
+    
+    // Validar todos los campos
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     const newErrors = {};
     Object.entries(formData).forEach(([name, value]) => {
       newErrors[name] = validateField(name, value);
     });
     setErrors(newErrors);
+<<<<<<< HEAD
   
     const hasErrors = Object.values(newErrors).some(error => error !== '' );
   
@@ -180,36 +290,104 @@ const GestionUsuarios = () => {
     }
   };
 
+=======
+    
+    // Verificar si hay errores
+    const hasErrors = Object.values(newErrors).some(error => error !== '');
+    
+    if (!hasErrors) {
+      // Aquí iría la lógica para registrar el usuario
+      console.log('Datos del formulario válidos:', formData);
+      setShowModal(false);
+      // Resetear el formulario
+      setFormData({
+        nombreCompleto: '',
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+      setErrors({
+        nombreCompleto: '',
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+      setTouched({
+        nombreCompleto: false,
+        username: false,
+        email: false,
+        password: false,
+        confirmPassword: false
+      });
+    }
+  };
+
+  // Cerrar modal y resetear formulario
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
   const handleCloseModal = () => {
     setShowModal(false);
     setFormData({
       nombreCompleto: '',
       username: '',
       email: '',
+<<<<<<< HEAD
+=======
+      password: '',
+      confirmPassword: ''
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     });
     setErrors({
       nombreCompleto: '',
       username: '',
       email: '',
+<<<<<<< HEAD
+=======
+      password: '',
+      confirmPassword: ''
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     });
     setTouched({
       nombreCompleto: false,
       username: false,
       email: false,
+<<<<<<< HEAD
+=======
+      password: false,
+      confirmPassword: false
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
     });
   };
 
   return (
     <div className="app-container d-flex w-100 min-vh-100">
+<<<<<<< HEAD
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
       <div className="usuarios-container p-4 ms-auto w-100">
         <div className="usuarios-header mb-4">
           <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión De Usuarios</h1>
+=======
+      <Sidebar 
+        userName="Usuario" 
+        userEmail="usuario@example.com" 
+      />
+      <div className="usuarios-container p-4 ms-auto w-100">
+        <div className="usuarios-header mb-4">
+          <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión de usuarios</h1>
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
           <div className="usuarios-divider"></div>
         </div>
 
         <div className="usuarios-actions d-flex justify-content-end mb-3">
+<<<<<<< HEAD
           <button className="btn-registrar btn btn-primary" onClick={() => setShowModal(true)}>
+=======
+          <button 
+            className="btn-registrar btn btn-primary"
+            onClick={() => setShowModal(true)}
+          >
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
             Registrar
           </button>
         </div>
@@ -228,7 +406,11 @@ const GestionUsuarios = () => {
             <tbody>
               {usuarios.map((usuario) => (
                 <tr key={usuario.id}>
+<<<<<<< HEAD
                   <td>{usuario.nombreCompleto}</td>
+=======
+                  <td>{usuario.nombre}</td>
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                   <td>{usuario.email}</td>
                   <td>{usuario.rol}</td>
                   <td>
@@ -257,7 +439,15 @@ const GestionUsuarios = () => {
           <div className="modal-content">
             <div className="modal-header border-0">
               <h5 className="modal-title fw-medium text-center w-100 registro-title">Registro de Usuario</h5>
+<<<<<<< HEAD
               <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+=======
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={handleCloseModal}
+              ></button>
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit} noValidate>
@@ -270,41 +460,68 @@ const GestionUsuarios = () => {
                     value={formData.nombreCompleto}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
+<<<<<<< HEAD
+=======
+                    required
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                   />
                   {touched.nombreCompleto && errors.nombreCompleto && (
                     <div className="invalid-feedback">{errors.nombreCompleto}</div>
                   )}
                 </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                 <div className="mb-3">
                   <input
                     type="text"
                     className={`form-control ${touched.username && (errors.username ? 'is-invalid' : 'is-valid')}`}
+<<<<<<< HEAD
                     placeholder="Nombre de usuario"
+=======
+                    placeholder="Username"
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
+<<<<<<< HEAD
+=======
+                    required
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                   />
                   {touched.username && errors.username && (
                     <div className="invalid-feedback">{errors.username}</div>
                   )}
                 </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                 <div className="mb-3">
                   <input
                     type="email"
                     className={`form-control ${touched.email && (errors.email ? 'is-invalid' : 'is-valid')}`}
+<<<<<<< HEAD
                     placeholder="Correo electrónico"
+=======
+                    placeholder="Email Address"
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
+<<<<<<< HEAD
+=======
+                    required
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
                   />
                   {touched.email && errors.email && (
                     <div className="invalid-feedback">{errors.email}</div>
                   )}
                 </div>
+<<<<<<< HEAD
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
@@ -312,6 +529,47 @@ const GestionUsuarios = () => {
                 >
                   Registrar
                 </button>
+=======
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className={`form-control ${touched.password && (errors.password ? 'is-invalid' : 'is-valid')}`}
+                    placeholder="Password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  {touched.password && errors.password && (
+                    <div className="invalid-feedback">{errors.password}</div>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    className={`form-control ${touched.confirmPassword && (errors.confirmPassword ? 'is-invalid' : 'is-valid')}`}
+                    placeholder="Confirm Password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  {touched.confirmPassword && errors.confirmPassword && (
+                    <div className="invalid-feedback">{errors.confirmPassword}</div>
+                  )}
+                </div>
+                <div className="text-center">
+                  <button 
+                    type="submit" 
+                    className="btn btn-registrar btn-primary px-4 py-2"
+                    disabled={!formValid}
+                  >
+                    Registrar
+                  </button>
+                </div>
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
               </form>
             </div>
           </div>
@@ -321,4 +579,8 @@ const GestionUsuarios = () => {
   );
 };
 
+<<<<<<< HEAD
 export default GestionUsuarios;
+=======
+export default GestionUsuarios;
+>>>>>>> b2303450489b61abe661d58b7de950b24129fa51
