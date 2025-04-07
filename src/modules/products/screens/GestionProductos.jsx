@@ -21,14 +21,14 @@ const GestionProductos = () => {
     cantidad: '',
     unidadMedida: '',
     stock: '',
-    idCategoria: '', 
+    idCategoria: '',
     idSubcategoria: '',
   });
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
-  
+
   // Variables para la búsqueda y paginado
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -174,7 +174,7 @@ const GestionProductos = () => {
         { nombre: newCategoryName },
         { headers: { Authorization: token ? `Bearer ${token}` : '' } }
       );
-  
+
       const nuevaCategoria = response.data.body.data;
       setCategorias([...categorias, nuevaCategoria]);
       setSelectedCategoria(nuevaCategoria.id); // seleccionar la nueva
@@ -186,12 +186,12 @@ const GestionProductos = () => {
 
   const handleSubcategorySubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!selectedCategoria || !newSubcategoryName) {
       alert("Selecciona una categoría y proporciona un nombre para la subcategoría.");
       return;
     }
-  
+
     const token = getToken();
     try {
       const response = await axios.put(
@@ -199,13 +199,13 @@ const GestionProductos = () => {
         { nombre: newSubcategoryName },
         { headers: { Authorization: token ? `Bearer ${token}` : '' } }
       );
-  
+
       // Actualizar las subcategorías de la categoría seleccionada
       const subResponse = await axios.get(
         `http://localhost:8080/api/categoria/${selectedCategoria}/subcategorias`,
         { headers: { Authorization: token ? `Bearer ${token}` : '' } }
       );
-  
+
       setSubcategorias(subResponse.data || []); // Actualiza la lista de subcategorías
       setNewSubcategoryName(''); // Limpia el campo de nombre de subcategoría
       alert("Subcategoría agregada correctamente!");
@@ -293,16 +293,16 @@ const GestionProductos = () => {
 
         {/* Paginación */}
         <div className="d-flex justify-content-center mt-4">
-          <button 
-            className="btn btn-secondary mx-2" 
-            onClick={() => paginate(currentPage - 1)} 
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => paginate(currentPage - 1)}
             disabled={currentPage === 1}
           >
             Anterior
           </button>
           <span> Página {currentPage} </span>
-          <button 
-            className="btn btn-secondary mx-2" 
+          <button
+            className="btn btn-secondary mx-2"
             onClick={() => paginate(currentPage + 1)}
             disabled={currentPage === Math.ceil(filteredProductos.length / itemsPerPage)}
           >
@@ -317,7 +317,128 @@ const GestionProductos = () => {
                 <h2 className="fw-medium text-center w-100">Registro de Producto</h2>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
                 <form onSubmit={handleSubmit} noValidate>
-                  {/* Formulario de producto */}
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      name="nombre"
+                      placeholder="Nombre"
+                      className="form-control"
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <textarea
+                      name="descripcion"
+                      placeholder="Descripción"
+                      className="form-control"
+                      value={formData.descripcion}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <input
+                      type="number"
+                      name="precio"
+                      placeholder="Precio"
+                      className="form-control"
+                      value={formData.precio}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <input
+                      type="number"
+                      name="cantidad"
+                      placeholder="Cantidad"
+                      className="form-control"
+                      value={formData.cantidad}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <select
+                      name="unidadMedida"
+                      className="form-control"
+                      value={formData.unidadMedida}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Seleccione unidad</option>
+                      <option value="mg">miligramo (mg)</option>
+                      <option value="g">Gramo (g)</option>
+                      <option value="ml">militros (ml)</option>
+
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <input
+                      type="number"
+                      name="stock"
+                      placeholder="Stock"
+                      className="form-control"
+                      value={formData.stock}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <select
+                      name="idCategoria"
+                      className="form-control"
+                      value={formData.idCategoria}
+                      onChange={handleCategoriaChange}
+                      required
+                    >
+                      <option value="">Seleccione una categoría</option>
+                      {categorias.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <select
+                      name="idSubcategoria"
+                      className="form-control"
+                      value={formData.idSubcategoria}
+                      onChange={handleInputChange}
+                      required
+                      disabled={!selectedCategoria}
+                    >
+                      <option value="">Seleccione una subcategoría</option>
+                      {subcategorias.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="image" className="form-label">Imagen del producto</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      id="image"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+
+                  <div className="d-flex justify-content-end">
+                    <button type="submit" className="btn btn-primary">
+                      Registrar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary ms-2"
+                      onClick={() => setShowModal(false)}
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
