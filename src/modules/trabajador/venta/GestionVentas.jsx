@@ -5,6 +5,8 @@ import "../../../assets/bootstrap/bootstrap.min.css";
 import Sidebar from "../../../kernel/components/Sidebar";
 import "./GestionVentas.css"; // Asegúrate de importar después de Bootstrap para sobrescribir estilos
 import imageCompression from "browser-image-compression";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 
 const GestionVentas = () => {
@@ -27,6 +29,7 @@ const GestionVentas = () => {
     const [aplicarIVA, setAplicarIVA] = useState(false);
     const IVA_PORCENTAJE = 16;
     const [mostrarModalVisualizacion, setMostrarModalVisualizacion] = useState(false);
+
 
     useEffect(() => {
         fetchVentas();
@@ -55,24 +58,84 @@ const GestionVentas = () => {
     const confirmarCambioPago = (idVenta) => {
         const confirmado = window.confirm("¿Confirmas que el pago ha sido recibido correctamente?");
         if (!confirmado) return;
-      
+
         const token = sessionStorage.getItem("token");
-      
+
         axios.patch(`http://localhost:8080/api/ventas/${idVenta}`, {}, {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
+            headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+            },
         })
-          .then(() => {
-            alert("Estado actualizado a pagado.");
-            fetchVentas();
-          })
-          .catch((err) => {
-            console.error("Error al cambiar estado de pago:", err);
-            alert("No se pudo actualizar el estado de pago.");
-          });
-      };
-      
+            .then(() => {
+                alert("Estado actualizado a pagado.");
+                fetchVentas();
+            })
+            .catch((err) => {
+                console.error("Error al cambiar estado de pago:", err);
+                alert("No se pudo actualizar el estado de pago.");
+            });
+    };
+    const handleGenerarPDF = async () => {
+        const doc = new jsPDF();
+        const cliente = clientes.find(c => c.id === ventaSeleccionada.idCliente);
+
+        doc.setFontSize(18);
+        doc.text("Comprobante de Venta", 14, 22);
+
+        doc.setFontSize(12);
+        doc.text(`Cliente: ${cliente?.nombre} ${cliente?.apellidoPaterno} ${cliente?.apellidoMaterno}`, 14, 32);
+        doc.text(`Tipo de pago: ${ventaSeleccionada.tipoDePago}`, 14, 40);
+        doc.text(`Tipo de entrega: ${ventaSeleccionada.tipoDeEntrega}`, 14, 48);
+        doc.text(`Total: $${ventaSeleccionada.total}`, 14, 56);
+
+        const productosPDF = Object.entries(ventaSeleccionada.productos || {}).map(([idProducto, cantidad]) => {
+            const producto = catalogoProductos.find(p => p.id === idProducto);
+            return [
+                producto ? producto.nombre : "Desconocido",
+                cantidad,
+                producto ? `$${producto.precio.toFixed(2)}` : "-",
+                producto ? `$${(producto.precio * cantidad).toFixed(2)}` : "-"
+            ];
+        });
+
+        autoTable(doc, {
+            startY: 66,
+            head: [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]],
+            body: productosPDF
+        });
+
+        // Si es entrega por domicilio o paquetería y hay imagen de envío, incluirla
+        if (
+            ["domicilio", "paqueteria"].includes(ventaSeleccionada.tipoDeEntrega.toLowerCase()) &&
+            ventaSeleccionada.urlImagenEnvio
+        ) {
+            const imageUrl = `http://localhost:8080/images/${ventaSeleccionada.urlImagenEnvio}`;
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const imgData = reader.result;
+                    const finalY = doc.lastAutoTable.finalY + 10;
+
+                    doc.text("Evidencia de envío:", 14, finalY);
+                    doc.addImage(imgData, "JPEG", 14, finalY + 5, 80, 60); // Ajusta tamaño aquí
+
+                    doc.save(`venta-${ventaSeleccionada.id}.pdf`);
+                };
+
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                console.error("Error al cargar la imagen de evidencia:", error);
+                alert("No se pudo cargar la imagen de envío para el PDF.");
+            }
+        } else {
+            doc.save(`venta-${ventaSeleccionada.id}.pdf`);
+        }
+    };
+
+
 
 
     const fetchProductos = async () => {
@@ -114,9 +177,23 @@ const GestionVentas = () => {
         setShowRegistroModal(false);
     };
 
-    const handleVerVenta = (venta) => {
-        setShowDetalleVentaModal(true);
+    const handleVerVenta = async (venta) => {
+        try {
+            const token = sessionStorage.getItem("token");
+            const res = await axios.get(`http://localhost:8080/api/ventas/${venta.id}`, {
+                headers: {
+                    Authorization: token ? `Bearer ${token}` : "",
+                },
+            });
+
+            setVentaSeleccionada(res.data.body?.data || res.data);
+            setShowDetalleVentaModal(true);
+        } catch (err) {
+            console.error("Error al obtener detalles de venta:", err);
+            alert("No se pudieron cargar los detalles de la venta.");
+        }
     };
+
 
     const handleCloseDetalleVentaModal = () => {
         setShowDetalleVentaModal(false);
@@ -284,6 +361,7 @@ const GestionVentas = () => {
     };
 
 
+
     return (
         <div className="gestion-ventas-container">
             <Sidebar userName="Usuario" userEmail="usuario@example.com" />
@@ -327,14 +405,26 @@ const GestionVentas = () => {
                                     <td>{venta.estado ? "Sí" : "No"}</td>
                                     <td>{venta.enviado ? "Sí" : "No"}</td>
                                     <td className="d-flex flex-column gap-1">
+                                        {venta.estado && (
+                                            <button
+                                                className="btn btn-sm btn-outline-primary"
+                                                onClick={() => {
+                                                    setVentaSeleccionada(venta);
+                                                    setShowDetalleVentaModal(true);
+                                                }}
+                                            >
+                                                Ver detalles
+                                            </button>
+                                        )}
                                         {!venta.estado && (
                                             <button
-                                                className="btn btn-sm btn-outline-success"
+                                                className="btn btn-sm btn-warning"
                                                 onClick={() => confirmarCambioPago(venta.id)}
                                             >
                                                 Marcar como pagado
                                             </button>
                                         )}
+
 
                                         {(venta.tipoDeEntrega === 'domicilio' || venta.tipoDeEntrega === 'paqueteria') && !venta.urlImagenEnvio && (
                                             <button
@@ -412,6 +502,63 @@ const GestionVentas = () => {
                     </div>
                 </div>
             )}
+            {showDetalleVentaModal && ventaSeleccionada && (
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className="modal-content p-4">
+                            <h5 className="text-center mb-4">Detalles de la Venta</h5>
+
+                            <p><strong>Cliente:</strong> {
+                                (() => {
+                                    const cliente = clientes.find(c => c.id === ventaSeleccionada.idCliente);
+                                    return cliente
+                                        ? `${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`
+                                        : "No disponible";
+                                })()
+                            }</p>
+                            <p><strong>Tipo de pago:</strong> {ventaSeleccionada.tipoDePago}</p>
+                            <p><strong>Tipo de entrega:</strong> {ventaSeleccionada.tipoDeEntrega}</p>
+                            <p><strong>Total:</strong> ${ventaSeleccionada.total}</p>
+
+                            <h6 className="mt-4">Productos comprados:</h6>
+                            <table className="table table-sm mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio unitario</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(ventaSeleccionada.productos || {}).map(([idProducto, cantidad], index) => {
+                                        const producto = catalogoProductos.find(p => p.id === idProducto);
+                                        return (
+                                            <tr key={index}>
+                                                <td>{producto ? producto.nombre : "Producto no encontrado"}</td>
+                                                <td>{cantidad}</td>
+                                                <td>${producto ? producto.precio.toFixed(2) : "-"}</td>
+                                                <td>${producto ? (producto.precio * cantidad).toFixed(2) : "-"}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+
+
+                            <div className="d-flex justify-content-end gap-2 mt-4">
+                                <button className="btn btn-success" onClick={handleGenerarPDF}>
+                                    Descargar PDF
+                                </button>
+                                <button className="btn btn-secondary" onClick={() => setShowDetalleVentaModal(false)}>
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
 
 
