@@ -397,6 +397,28 @@
     background-color: #7d2269;
     color: white;
   }
+
+/* Tamaño de los botones de acción */
+.btn-action-size {
+  width: 120px;  /* Establece un ancho fijo para todos los botones */
+  height: 40px;  /* Ajuste de altura para uniformidad */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* Estilo para los botones dentro de las celdas de la tabla */
+.btn-action-size .small {
+  font-size: 12px;
+}
+
+/* Modifica los iconos para que se ajusten al tamaño del botón */
+.btn-action-size svg {
+  font-size: 18px;
+}
+
+
   
  
   
