@@ -701,7 +701,6 @@ const GestionVentas = () => {
                                                 <thead className="bg-secondary bg-opacity-10 text-purple">
                                                     <tr>
                                                         <th>Producto</th>
-                                                        <th>Categoría</th>
                                                         <th className="text-center">Precio</th>
                                                         <th className="text-center">Acción</th>
                                                     </tr>
@@ -712,9 +711,8 @@ const GestionVentas = () => {
                                                             <tr key={producto.id}>
                                                                 <td>
                                                                     <div className="fw-medium">{producto.nombre}</div>
-                                                                    <div className="text-muted small">{producto.descripcion}</div>
+                                                                    <div className="text-muted small">{producto.cantidad + producto.unidadMedida}</div>
                                                                 </td>
-                                                                <td>{producto.categoria}</td>
                                                                 <td className="text-center">${producto.precio}</td>
                                                                 <td className="text-center">
                                                                     <button
@@ -757,7 +755,7 @@ const GestionVentas = () => {
                                                             <tr key={producto.id}>
                                                                 <td>
                                                                     <div className="fw-medium">{producto.nombre}</div>
-                                                                    <div className="text-muted small">{producto.descripcion}</div>
+                                                                    <div className="text-muted small">{producto.cantidad + producto.unidadMedida}</div>
                                                                 </td>
                                                                 <td className="text-center">${producto.precio}</td>
                                                                 <td className="text-center">
