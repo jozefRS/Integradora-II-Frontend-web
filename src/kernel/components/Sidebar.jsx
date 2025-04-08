@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, Package, Users, Settings, LogOut, Menu, DollarSign, ShoppingCart } from 'lucide-react';
+import { Home, BookOpen, Package, Users, LogOut, DollarSign, ShoppingCart } from 'lucide-react';
 import './Sidebar.css';
 import logo from '../../assets/image.png';
 
@@ -53,11 +53,9 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`} onClick={toggleSidebar}> {/* Agregado onClick aquí */}
+    <div className={`sidebar ${expanded ? 'expanded' : 'collapsed'}`} onClick={toggleSidebar}>
       <div className="sidebar-header">
-        <button className="menu-button" onClick={toggleSidebar}>
-          <Menu size={24} />
-        </button>
+        {/* Este es el logo que ya no debe ser el ícono de hamburguesa */}
         <div className="logo-container">
           <img src={logo || "/placeholder.svg"} alt="Zaziderma" className="sidebar-logo" />
           {expanded && <span className="sidebar-title">Zaziderma</span>}

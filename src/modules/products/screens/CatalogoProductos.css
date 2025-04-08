@@ -1,28 +1,31 @@
-/* Estilos para el contenedor principal y scroll */
+/* Contenedor principal */
 .app-wrapper {
+  display: flex; /* Usamos flex para manejar la distribución de los elementos */
   width: 100%;
   min-height: 100vh;
-  overflow: hidden;
   position: relative;
+  overflow: hidden; /* Evita el doble scroll */
 }
 
+/* Contenedor del contenido que maneja el scroll */
 .content-wrapper {
-  flex: 1;
+  flex-grow: 1; /* Asegura que el contenedor ocupe todo el espacio disponible */
   height: 100vh;
-  overflow-y: auto; /* Permite el scroll vertical */
-  margin-left: 70px;
-  width: calc(100% - 70px);
+  overflow-y: auto; /* Permite el scroll solo en dirección vertical */
+  margin-left: 70px; /* Ajusta el espacio para la sidebar */
+  width: 100%; /* Asegura que el contenedor ocupe todo el ancho disponible */
   transition: margin-left 0.3s ease, width 0.3s ease;
-  position: relative;
+  padding-right: 0; /* Elimina padding innecesario para evitar el espacio en blanco */
+  box-sizing: border-box; /* Asegura que el padding y margen no afecten el ancho del contenedor */
 }
 
 /* Ajuste cuando la sidebar está expandida */
 .sidebar.expanded ~ .content-wrapper {
-  margin-left: 220px;
-  width: calc(100% - 220px);
+  margin-left: 220px; /* Ajusta la posición cuando la sidebar está expandida */
+  width: calc(100% - 220px); /* Ajusta el ancho disponible */
 }
 
-/* Clases personalizadas para colores */
+/* Estilos adicionales de color */
 .text-zaziderma {
   color: #8C2475 !important;
 }
@@ -56,12 +59,12 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Estilos responsivos adicionales */
+/* Estilos responsivos */
 @media (max-width: 768px) {
   .content-wrapper {
     padding: 0;
   }
-  
+
   .container-fluid {
     padding: 15px !important;
   }
@@ -72,7 +75,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Evitamos double scroll */
+  overflow: hidden; /* Evita el doble scroll */
 }
 
 #root {

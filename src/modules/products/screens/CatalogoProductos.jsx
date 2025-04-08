@@ -150,7 +150,7 @@ const CatalogoProductos = () => {
   }
 
   return (
-    <div className="app-wrapper d-flex">
+    <div className="app-wrapper">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
       <div className="content-wrapper">
         <div className="container-fluid py-4 px-4">
@@ -160,7 +160,7 @@ const CatalogoProductos = () => {
               <hr className="border-zaziderma" />
             </div>
           </div>
-
+  
           {/* Filtros por categoría, subcategoría y búsqueda */}
           <div className="row mb-4">
             <div className="col-4">
@@ -173,7 +173,7 @@ const CatalogoProductos = () => {
                 ))}
               </select>
             </div>
-
+  
             <div className="col-4">
               <select
                 className="form-select"
@@ -189,7 +189,7 @@ const CatalogoProductos = () => {
                 ))}
               </select>
             </div>
-
+  
             <div className="col-4">
               <input
                 type="text"
@@ -200,7 +200,7 @@ const CatalogoProductos = () => {
               />
             </div>
           </div>
-
+  
           {/* Mostrar los productos filtrados */}
           <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {cargando ? (
@@ -252,9 +252,9 @@ const CatalogoProductos = () => {
               </div>
             )}
           </div>
-
+  
           {/* Paginación */}
-          <div className="d-flex justify-content-center mt-4">
+          <div className="d-flex justify-content-center mt-4 gap-3 align-items-center">
             <button
               className="btn btn-secondary mx-2"
               onClick={() => handlePageChange(paginaActual - 1)}
@@ -274,7 +274,8 @@ const CatalogoProductos = () => {
         </div>
       </div>
     </div>
-  )
+  );
+  
 }
 
 export default CatalogoProductos

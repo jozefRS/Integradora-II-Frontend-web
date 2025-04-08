@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Edit, Eye, Trash2 } from "lucide-react"
+import { Edit, Eye, RefreshCw } from "lucide-react"
 import "../../../assets/bootstrap/bootstrap.min.css"
 import "./GestionUsuarios.css"
 import Sidebar from "../../../kernel/components/Sidebar"
@@ -10,6 +10,10 @@ import Swal from "sweetalert2" // Importamos SweetAlert2
 
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([])
+  //1.- Estado de busqueda y paginacion
+  const [busqueda, setBusqueda] = useState("")
+  const [paginaActual, setPaginaActual] = useState(1)
+  const usuariosPorPagina = 10
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -229,14 +233,78 @@ const GestionUsuarios = () => {
     setTouched({
       nombreCompleto: false,
       username: false,
-      email: false,
+      email: "",
+    })
+  }
+
+  const usuariosFiltrados = usuarios.filter((usuario) =>
+    usuario.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase()),
+  )
+
+  const indexOfLastUsuario = paginaActual * usuariosPorPagina
+  const indexOfFirstUsuario = indexOfLastUsuario - usuariosPorPagina
+  const usuariosPaginados = usuariosFiltrados.slice(indexOfFirstUsuario, indexOfLastUsuario)
+
+  const handleChangeStatus = (usuario) => {
+    const newStatus = !usuario.activo
+    const statusText = newStatus ? "activar" : "desactivar"
+
+    Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${statusText} al usuario ${usuario.nombreCompleto}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, cambiar estado",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = sessionStorage.getItem("token")
+
+          // Mostramos el loader mientras se procesa
+          Swal.fire({
+            title: "Procesando",
+            text: "Por favor espere...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
+            },
+          })
+
+          // Aquí iría la llamada a la API para cambiar el estado
+          // Por ejemplo:
+          // await axios.put(`http://localhost:8080/api/usuario/${usuario.id}/cambiar-estado`,
+          //   { activo: newStatus },
+          //   {
+          //     headers: {
+          //       Authorization: token ? `Bearer ${token}` : "",
+          //     },
+          //   }
+          // );
+
+          // Simulamos la respuesta exitosa actualizando el estado local
+          const updatedUsuarios = usuarios.map((u) => (u.id === usuario.id ? { ...u, activo: newStatus } : u))
+          setUsuarios(updatedUsuarios)
+
+          Swal.fire(
+            "¡Completado!",
+            `El usuario ha sido ${newStatus ? "activado" : "desactivado"} correctamente.`,
+            "success",
+          )
+        } catch (error) {
+          console.error("Error al cambiar el estado del usuario:", error)
+          Swal.fire("Error", "No se pudo cambiar el estado del usuario.", "error")
+        }
+      }
     })
   }
 
   return (
     <div className="app-container d-flex w-100 min-vh-100">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
-      <div className="usuarios-container p-4 ms-auto w-100">
+      <div className="usuarios-container">
         <div className="usuarios-header mb-4">
           <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión De Usuarios</h1>
           <div className="usuarios-divider"></div>
@@ -246,6 +314,19 @@ const GestionUsuarios = () => {
           <button className="btn-registrar btn btn-primary" onClick={() => setShowModal(true)}>
             Registrar
           </button>
+        </div>
+
+        <div className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por nombre..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value)
+              setPaginaActual(1) // Reinicia a la página 1 en cada búsqueda
+            }}
+          />
         </div>
 
         <div className="usuarios-table-container table-responsive">
@@ -260,7 +341,7 @@ const GestionUsuarios = () => {
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => (
+              {usuariosPaginados.map((usuario) => (
                 <tr key={usuario.id}>
                   <td>{usuario.nombreCompleto}</td>
                   <td>{usuario.email}</td>
@@ -280,8 +361,12 @@ const GestionUsuarios = () => {
                       <button className="btn-editar btn btn-sm btn-light" title="Editar usuario">
                         <Edit size={18} />
                       </button>
-                      <button className="btn-eliminar btn btn-sm btn-danger" title="Eliminar usuario">
-                        <Trash2 size={18} />
+                      <button
+                        className="btn-status btn btn-sm btn-warning"
+                        title="Cambiar estado"
+                        onClick={() => handleChangeStatus(usuario)}
+                      >
+                        <RefreshCw size={18} />
                       </button>
                     </div>
                   </td>
@@ -289,6 +374,29 @@ const GestionUsuarios = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="d-flex justify-content-center mt-4 gap-3 align-items-center">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+          >
+            Anterior
+          </button>
+
+          <span>Página {paginaActual}</span>
+
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina)
+              setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))
+            }}
+            disabled={paginaActual >= Math.ceil(usuariosFiltrados.length / usuariosPorPagina)}
+          >
+            Siguiente
+          </button>
         </div>
       </div>
 

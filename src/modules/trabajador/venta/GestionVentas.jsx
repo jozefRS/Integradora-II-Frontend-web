@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, Plus, Search, Filter, Upload, CreditCard  } from "lucide-react";
+import { Eye, Plus, Search, Filter, Upload, CreditCard } from "lucide-react";
 import axios from "axios";
 import "../../../assets/bootstrap/bootstrap.min.css";
 import Sidebar from "../../../kernel/components/Sidebar";
@@ -33,7 +33,7 @@ const GestionVentas = () => {
     const [busquedaEstadoEnviado, setBusquedaEstadoEnviado] = useState(""); // Para el filtro de estado enviado
     const [pagina, setPagina] = useState(1);  // Para el paginado
     const [ventasPorPagina] = useState(8);  // Número de ventas por página
-    const [ventasFiltradas, setVentasFiltradas] = useState([]); // Para almacenar las ventas filtradas
+    const [paginaActual, setPaginaActual] = useState(1);
 
 
     useEffect(() => {
@@ -67,7 +67,7 @@ const GestionVentas = () => {
         if (busquedaCliente) {
             ventasFiltradas = ventasFiltradas.filter((venta) => {
                 const cliente = clientes.find(c => c.id === venta.idCliente);
-                return cliente && (cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase()) || 
+                return cliente && (cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase()) ||
                     `${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`.toLowerCase().includes(busquedaCliente.toLowerCase()));
             });
         }
@@ -85,9 +85,6 @@ const GestionVentas = () => {
     const handlePaginado = (nuevaPagina) => {
         setPagina(nuevaPagina);
     };
-
-    const ventasPaginadas = ventasFiltradas.slice((pagina - 1) * ventasPorPagina, pagina * ventasPorPagina);
-
 
     const confirmarCambioPago = (idVenta) => {
         const confirmado = window.confirm("¿Confirmas que el pago ha sido recibido correctamente?");
@@ -112,23 +109,23 @@ const GestionVentas = () => {
     const handleGenerarPDF = async () => {
         const doc = new jsPDF();
         const cliente = clientes.find(c => c.id === ventaSeleccionada.idCliente);
-    
+
         doc.setFontSize(18);
         doc.text("Comprobante de Venta", 14, 22);
-    
+
         doc.setFontSize(12);
         doc.text(`Cliente: ${cliente?.nombre} ${cliente?.apellidoPaterno} ${cliente?.apellidoMaterno}`, 14, 32);
         doc.text(`Tipo de pago: ${ventaSeleccionada.tipoDePago}`, 14, 40);
         doc.text(`Tipo de entrega: ${ventaSeleccionada.tipoDeEntrega}`, 14, 48);
         doc.text(`Total: $${parseFloat(ventaSeleccionada.total).toFixed(2)}`, 14, 56);
-    
+
         // Calcular el monto IVA
         const montoIVA = (
             (parseFloat(ventaSeleccionada.total) || 0) - (parseFloat(ventaSeleccionada.subTotal) || 0)
         ).toFixed(2);
-        
+
         doc.text(`Monto IVA: $${montoIVA}`, 14, 64);
-    
+
         // Mostrar productos
         const productosPDF = Object.entries(ventaSeleccionada.productos || {}).map(([idProducto, cantidad]) => {
             const producto = catalogoProductos.find(p => p.id === idProducto);
@@ -139,15 +136,15 @@ const GestionVentas = () => {
                 producto ? `$${(producto.precio * cantidad).toFixed(2)}` : "-"
             ];
         });
-    
+
         autoTable(doc, {
             startY: 74,
             head: [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]],
             body: productosPDF
         });
-    
-       
-    
+
+
+
         // Si hay imagen de envío, agregarla al PDF
         if (
             ["domicilio", "paqueteria"].includes(ventaSeleccionada.tipoDeEntrega.toLowerCase()) &&
@@ -158,17 +155,17 @@ const GestionVentas = () => {
                 const response = await fetch(imageUrl);
                 const blob = await response.blob();
                 const reader = new FileReader();
-    
+
                 reader.onloadend = () => {
                     const imgData = reader.result;
                     const finalY = doc.lastAutoTable.finalY + 10;
-    
+
                     doc.text("Evidencia de envío:", 14, finalY);
                     doc.addImage(imgData, "JPEG", 14, finalY + 5, 80, 60); // Ajusta tamaño aquí
-    
+
                     doc.save(`venta-${ventaSeleccionada.id}.pdf`);
                 };
-    
+
                 reader.readAsDataURL(blob);
             } catch (error) {
                 console.error("Error al cargar la imagen de evidencia:", error);
@@ -178,7 +175,7 @@ const GestionVentas = () => {
             doc.save(`venta-${ventaSeleccionada.id}.pdf`);
         }
     };
-    
+
 
 
     const fetchProductos = async () => {
@@ -236,7 +233,7 @@ const GestionVentas = () => {
             alert("No se pudieron cargar los detalles de la venta.");
         }
     };
-    
+
 
 
     const handleCloseDetalleVentaModal = () => {
@@ -404,124 +401,166 @@ const GestionVentas = () => {
         }
     };
 
+    const ventasFiltradas = ventas.filter((venta) => {
+        const cliente = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
+        if (!cliente) return false;
+
+        const nombreCompleto = `${cliente.nombre || ''} ${cliente.apellidoPaterno || ''} ${cliente.apellidoMaterno || ''}`.toLowerCase();
+        return nombreCompleto.includes(busquedaCliente.toLowerCase());
+    });
+
+
+    const ventasPaginadas = ventasFiltradas.slice(
+        (paginaActual - 1) * ventasPorPagina,
+        paginaActual * ventasPorPagina
+    );
+
 
 
     return (
         <div className="gestion-ventas-container">
-        <Sidebar userName="Usuario" userEmail="usuario@example.com" />
-        <div className="content-container">
-            <h1 className="text-center text-purple mb-3">Gestión de ventas</h1>
-            <hr className="mb-4" />
+            <Sidebar userName="Usuario" userEmail="usuario@example.com" />
+            <div className="content-container">
+                <h1 className="text-center text-purple mb-3">Gestión de ventas</h1>
+                <hr className="mb-4" />
 
-            {/* Filtros */}
-            <div className="d-flex justify-content-end mb-4">
+                {/* Filtros */}
+                <div className="d-flex justify-content-end mb-4">
                     <button className="btn btn-purple" onClick={handleOpenRegistroModal}>
                         Registrar
                     </button>
                 </div>
 
-        
-
-            <table className="table table-hover shadow-sm ventas-table">
-    <thead>
-        <tr>
-            <th>Cliente</th>
-            <th>Tipo de pago</th>
-            <th>Tipo de entrega</th>
-            <th>Total</th>
-            <th>Pagado</th>
-            <th>Enviado</th>
-            <th class="text-center" >Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {ventas.map((venta) => {
-            const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
-
-            return (
-                <tr key={venta.id}>
-                    <td>
-                        {clienteEncontrado
-                            ? `${clienteEncontrado.nombre} ${clienteEncontrado.apellidoPaterno} ${clienteEncontrado.apellidoMaterno}`
-                            : "Sin datos"}
-                    </td>
-                    <td>{venta.tipoDePago}</td>
-                    <td>{venta.tipoDeEntrega}</td>
-                    <td>${venta.total}</td>
-                    <td>{venta.estado ? "Sí" : "No"}</td>
-                    <td>{venta.enviado ? "Sí" : "No"}</td>
-                    <td className="d-flex justify-content-end gap-3">
-                        {/* Ver detalles */}
-                        {venta.estado && (
-                            <button
-                                className="btn btn-sm btn-outline-primary btn-action-size d-flex flex-column align-items-center"
-                                onClick={() => {
-                                    setVentaSeleccionada(venta);
-                                    setShowDetalleVentaModal(true);
-                                }}
-                            >
-                                <Eye size={16} />
-                                <span className="small">Ver detalles</span>
-                            </button>
-                        )}
-
-                        {/* Marcar como pagado */}
-                        {!venta.estado && (
-                            <button
-                                className="btn btn-sm btn-warning btn-action-size d-flex flex-column align-items-center"
-                                onClick={() => confirmarCambioPago(venta.id)}
-                            >
-                                <CreditCard size={16} />
-                                <span className="small">Pagar</span>
-                            </button>
-                        )}
-
-                        {/* Subir imagen de envío */}
-                        {(venta.tipoDeEntrega === 'domicilio' || venta.tipoDeEntrega === 'paqueteria') && !venta.urlImagenEnvio && (
-                            <button
-                                className="btn btn-sm btn-secondary btn-action-size d-flex flex-column align-items-center"
-                                onClick={() => {
-                                    setVentaSeleccionada(venta);
-                                    setMostrarModalEnvio(true);
-                                }}
-                            >
-                                <Upload size={16} />
-                                <span className="small">Subir evidencia</span>
-                            </button>
-                        )}
-
-                        {/* Visualizar evidencia */}
-                        {venta.urlImagenEnvio && (
-                            <button
-                                className="btn btn-sm btn-success btn-action-size d-flex flex-column align-items-center"
-                                onClick={() => {
-                                    setVentaSeleccionada(venta);
-                                    setMostrarModalVisualizacion(true);
-                                }}
-                            >
-                                <Eye size={16} />
-                                <span className="small">Ver evidencia</span>
-                            </button>
-                        )}
-                    </td>
-                </tr>
-            );
-        })}
-    </tbody>
-</table>
+                <div className="mb-3">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Buscar por cliente..."
+                        value={busquedaCliente}
+                        onChange={(e) => {
+                            setBusquedaCliente(e.target.value);
+                            setPaginaActual(1); // Reinicia a la primera página al buscar
+                        }}
+                    />
+                </div>
 
 
-            {/* Paginado */}
-            <div className="d-flex justify-content-center mt-4">
-                <button className="btn btn-secondary" onClick={() => handlePaginado(pagina - 1)} disabled={pagina <= 1}>
-                    Anterior
-                </button>
-                <span className="mx-3">Página {pagina}</span>
-                <button className="btn btn-secondary" onClick={() => handlePaginado(pagina + 1)}>
-                    Siguiente
-                </button>
+
+                <table className="table table-hover shadow-sm ventas-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Tipo de pago</th>
+                            <th>Tipo de entrega</th>
+                            <th>Total</th>
+                            <th>Pagado</th>
+                            <th>Enviado</th>
+                            <th class="text-center" >Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {ventasPaginadas.map((venta) => {
+                            const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
+
+                            return (
+                                <tr key={venta.id}>
+                                    <td>
+                                        {clienteEncontrado
+                                            ? `${clienteEncontrado.nombre} ${clienteEncontrado.apellidoPaterno} ${clienteEncontrado.apellidoMaterno}`
+                                            : "Sin datos"}
+                                    </td>
+                                    <td>{venta.tipoDePago}</td>
+                                    <td>{venta.tipoDeEntrega}</td>
+                                    <td>${venta.total}</td>
+                                    <td>{venta.estado ? "Sí" : "No"}</td>
+                                    <td>{venta.enviado ? "Sí" : "No"}</td>
+                                    <td className="d-flex justify-content-end gap-3">
+                                        {/* Ver detalles */}
+                                        {venta.estado && (
+                                            <button
+                                                className="btn btn-sm btn-outline-primary btn-action-size d-flex flex-column align-items-center"
+                                                onClick={() => {
+                                                    setVentaSeleccionada(venta);
+                                                    setShowDetalleVentaModal(true);
+                                                }}
+                                            >
+                                                <Eye size={16} />
+                                                <span className="small">Ver detalles</span>
+                                            </button>
+                                        )}
+
+                                        {/* Marcar como pagado */}
+                                        {!venta.estado && (
+                                            <button
+                                                className="btn btn-sm btn-warning btn-action-size d-flex flex-column align-items-center"
+                                                onClick={() => confirmarCambioPago(venta.id)}
+                                            >
+                                                <CreditCard size={16} />
+                                                <span className="small">Pagar</span>
+                                            </button>
+                                        )}
+
+                                        {/* Subir imagen de envío */}
+                                        {(venta.tipoDeEntrega === 'domicilio' || venta.tipoDeEntrega === 'paqueteria') && !venta.urlImagenEnvio && (
+                                            <button
+                                                className="btn btn-sm btn-secondary btn-action-size d-flex flex-column align-items-center"
+                                                onClick={() => {
+                                                    setVentaSeleccionada(venta);
+                                                    setMostrarModalEnvio(true);
+                                                }}
+                                            >
+                                                <Upload size={16} />
+                                                <span className="small">Subir evidencia</span>
+                                            </button>
+                                        )}
+
+                                        {/* Visualizar evidencia */}
+                                        {venta.urlImagenEnvio && (
+                                            <button
+                                                className="btn btn-sm btn-success btn-action-size d-flex flex-column align-items-center"
+                                                onClick={() => {
+                                                    setVentaSeleccionada(venta);
+                                                    setMostrarModalVisualizacion(true);
+                                                }}
+                                            >
+                                                <Eye size={16} />
+                                                <span className="small">Ver evidencia</span>
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+
+                <div className="d-flex justify-content-center mt-4 gap-3">
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+                        disabled={paginaActual === 1}
+                    >
+                        Anterior
+                    </button>
+
+                    <span>Página {paginaActual}</span>
+
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                            const totalPaginas = Math.ceil(ventasFiltradas.length / ventasPorPagina);
+                            setPaginaActual(prev => Math.min(prev + 1, totalPaginas));
+                        }}
+                        disabled={paginaActual >= Math.ceil(ventasFiltradas.length / ventasPorPagina)}
+                    >
+                        Siguiente
+                    </button>
+                </div>
+
+
+                
+             
             </div>
-        </div>
             {mostrarModalEnvio && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">
@@ -566,70 +605,70 @@ const GestionVentas = () => {
                     </div>
                 </div>
             )}
-          {showDetalleVentaModal && ventaSeleccionada && (
-    <div className="modal show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content p-4">
-                <h5 className="text-center mb-4">Detalles de la Venta</h5>
+            {showDetalleVentaModal && ventaSeleccionada && (
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className="modal-content p-4">
+                            <h5 className="text-center mb-4">Detalles de la Venta</h5>
 
-                <p><strong>Cliente:</strong> {
-                    (() => {
-                        const cliente = clientes.find(c => c.id === ventaSeleccionada.idCliente);
-                        return cliente
-                            ? `${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`
-                            : "No disponible";
-                    })()
-                }</p>
-                <p><strong>Tipo de pago:</strong> {ventaSeleccionada.tipoDePago}</p>
-                <p><strong>Tipo de entrega:</strong> {ventaSeleccionada.tipoDeEntrega}</p>
-                <p><strong>Total:</strong> ${parseFloat(ventaSeleccionada.total).toFixed(2)}</p>
+                            <p><strong>Cliente:</strong> {
+                                (() => {
+                                    const cliente = clientes.find(c => c.id === ventaSeleccionada.idCliente);
+                                    return cliente
+                                        ? `${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`
+                                        : "No disponible";
+                                })()
+                            }</p>
+                            <p><strong>Tipo de pago:</strong> {ventaSeleccionada.tipoDePago}</p>
+                            <p><strong>Tipo de entrega:</strong> {ventaSeleccionada.tipoDeEntrega}</p>
+                            <p><strong>Total:</strong> ${parseFloat(ventaSeleccionada.total).toFixed(2)}</p>
 
-                {/* Mostrar si se cobró IVA */}
-                <p><strong>IVA Cobrado:</strong> {ventaSeleccionada.aplicarIVA ? `Sí, ${IVA_PORCENTAJE}%` : "No se cobró IVA"}</p>
+                            {/* Mostrar si se cobró IVA */}
+                            <p><strong>IVA Cobrado:</strong> {ventaSeleccionada.aplicarIVA ? `Sí, ${IVA_PORCENTAJE}%` : "No se cobró IVA"}</p>
 
-                {/* Mostrar Monto IVA */}
-                <p><strong>Monto IVA:</strong> ${(
-                        (parseFloat(ventaSeleccionada.total) || 0) - (parseFloat(ventaSeleccionada.subTotal) || 0)
-                    ).toFixed(2)}</p>
-            
+                            {/* Mostrar Monto IVA */}
+                            <p><strong>Monto IVA:</strong> ${(
+                                (parseFloat(ventaSeleccionada.total) || 0) - (parseFloat(ventaSeleccionada.subTotal) || 0)
+                            ).toFixed(2)}</p>
 
-                <h6 className="mt-4">Productos comprados:</h6>
-                <table className="table table-sm mt-2">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio unitario</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.entries(ventaSeleccionada.productos || {}).map(([idProducto, cantidad], index) => {
-                            const producto = catalogoProductos.find(p => p.id === idProducto);
-                            return (
-                                <tr key={index}>
-                                    <td>{producto ? producto.nombre : "Producto no encontrado"}</td>
-                                    <td>{cantidad}</td>
-                                    <td>${producto ? producto.precio.toFixed(2) : "-"}</td>
-                                    <td>${producto ? (producto.precio * cantidad).toFixed(2) : "-"}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
 
-                <div className="d-flex justify-content-end gap-2 mt-4">
-                    <button className="btn btn-success" onClick={handleGenerarPDF}>
-                        Descargar PDF
-                    </button>
-                    <button className="btn btn-secondary" onClick={() => setShowDetalleVentaModal(false)}>
-                        Cerrar
-                    </button>
+                            <h6 className="mt-4">Productos comprados:</h6>
+                            <table className="table table-sm mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio unitario</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(ventaSeleccionada.productos || {}).map(([idProducto, cantidad], index) => {
+                                        const producto = catalogoProductos.find(p => p.id === idProducto);
+                                        return (
+                                            <tr key={index}>
+                                                <td>{producto ? producto.nombre : "Producto no encontrado"}</td>
+                                                <td>{cantidad}</td>
+                                                <td>${producto ? producto.precio.toFixed(2) : "-"}</td>
+                                                <td>${producto ? (producto.precio * cantidad).toFixed(2) : "-"}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+
+                            <div className="d-flex justify-content-end gap-2 mt-4">
+                                <button className="btn btn-success" onClick={handleGenerarPDF}>
+                                    Descargar PDF
+                                </button>
+                                <button className="btn btn-secondary" onClick={() => setShowDetalleVentaModal(false)}>
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
 
 

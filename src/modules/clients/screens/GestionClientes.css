@@ -5,8 +5,11 @@
 }
 
 .clientes-container {
-  margin-left: 80px;
+  flex: 1;
+  padding: 20px;
+  margin-left: 70px;
   width: calc(100% - 80px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .clientes-title, .registro-title {

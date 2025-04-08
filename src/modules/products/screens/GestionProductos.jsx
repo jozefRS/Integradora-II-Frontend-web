@@ -6,6 +6,7 @@ import "../../../assets/bootstrap/bootstrap.min.css"
 import "./GestionProductos.css"
 import Sidebar from "../../../kernel/components/Sidebar"
 import Swal from "sweetalert2" // Importamos SweetAlert2
+import { productoSchema, categoriaSchema, subcategoriaSchema } from '../../../utils/validationForm';
 
 const GestionProductos = () => {
   const [categorias, setCategorias] = useState([])
@@ -36,6 +37,8 @@ const GestionProductos = () => {
   const itemsPerPage = 9
 
   const getToken = () => sessionStorage.getItem("token")
+
+  const [errores, setErrores] = useState({});
 
   useEffect(() => {
     // Mostramos el loader mientras se cargan las categorías
@@ -176,40 +179,62 @@ const GestionProductos = () => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const imageUrl = await handleImageUpload()
-
-    if (!imageUrl) {
-      return // Ya se mostró un mensaje en handleImageUpload
+    e.preventDefault();
+  
+    // Validación con Yup antes de continuar
+    try {
+      await productoSchema.validate(formData, { abortEarly: false });
+      setErrores({}); // Limpiar errores si pasa validación
+    } catch (error) {
+      if (error.inner) {
+        const nuevosErrores = {};
+        error.inner.forEach((e) => {
+          nuevosErrores[e.path] = e.message;
+        });
+        setErrores(nuevosErrores);
+      } else {
+        Swal.fire("Error", error.message, "error");
+      }
+      return; // Detener el flujo si hay errores de validación
     }
-
-    // Mostramos el loader mientras se registra el producto
+  
+    // Validar y subir imagen
+    const imageUrl = await handleImageUpload();
+    if (!imageUrl) {
+      Swal.fire("Error", "Por favor sube una imagen.", "warning");
+      return;
+    }
+  
+    // Mostrar loader mientras se registra el producto
     Swal.fire({
       title: "Registrando producto",
       text: "Por favor espere...",
       allowOutsideClick: false,
       didOpen: () => {
-        Swal.showLoading()
+        Swal.showLoading();
       },
-    })
-
+    });
+  
     const productData = {
       ...formData,
       imagen: imageUrl,
-    }
-
-    const token = sessionStorage.getItem("token")
+    };
+  
+    const token = sessionStorage.getItem("token");
+  
     try {
       await axios.post("http://localhost:8080/api/producto", productData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-      })
-
-      Swal.close() // Cerramos el loader
-
-      setShowModal(false)
+      });
+  
+      Swal.close(); // Cerrar loader
+      Swal.fire("Éxito", "Producto registrado con éxito", "success");
+  
+      // Limpiar formulario y cerrar modal
+      setShowModal(false);
       setFormData({
         nombre: "",
         descripcion: "",
@@ -219,13 +244,14 @@ const GestionProductos = () => {
         stock: "",
         idCategoria: "",
         idSubcategoria: "",
-      })
-      fetchProductos()
+      });
+      fetchProductos();
     } catch (error) {
-      console.error("Error al registrar producto:", error.response?.data || error.message)
-      Swal.close() // Cerramos el loader
+      Swal.close(); // Cerrar loader
+      console.error("Error al registrar producto:", error.response?.data || error.message);
+      Swal.fire("Error", "Ocurrió un error al registrar el producto.", "error");
     }
-  }
+  };
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault() // evitar recarga
@@ -328,10 +354,21 @@ const GestionProductos = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber)
 
+  const validateField = async (fieldName, value) => {
+    try {
+      await productoSchema.validateAt(fieldName, { ...formData, [fieldName]: value });
+      setErrores((prev) => ({ ...prev, [fieldName]: undefined }));
+    } catch (error) {
+      setErrores((prev) => ({ ...prev, [fieldName]: error.message }));
+    }
+  };
+
   return (
     <div className="app-container d-flex w-100 min-vh-100">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
-      <div className="usuarios-container p-4 ms-auto w-100">
+      
+      {/* Contenido principal - IMPORTANTE: mantener la clase usuarios-container para que el CSS funcione */}
+      <div className="usuarios-container p-4">
         <div className="usuarios-header mb-4">
           <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión De Productos</h1>
           <div className="usuarios-divider"></div>
@@ -352,48 +389,50 @@ const GestionProductos = () => {
           <button className="btn-registrar btn btn-primary" onClick={() => setShowModal(true)}>
             Registrar producto
           </button>
-          <button className="btn-registrar btn btn-secondary" onClick={() => setShowCategoryModal(true)}>
+          <button className="btn-registrar btn btn-secondary ms-2" onClick={() => setShowCategoryModal(true)}>
             Crear categoría/subcategoría
           </button>
         </div>
 
-        <table className="table table-hover shadow-sm">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Precio</th>
-              <th>Cantidad</th>
-              <th>Unidad</th>
-              <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentProductos.map((producto) => (
-              <tr key={producto.id}>
-                <td>{producto.nombre}</td>
-                <td>{producto.precio}</td>
-                <td>{producto.cantidad}</td>
-                <td>{producto.unidadMedida}</td>
-                <td>{producto.stock}</td>
-                <td>
-                  <span className={`badge ${producto.estado ? "bg-success" : "bg-secondary"}`}>
-                    {producto.estado ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td>
-                  <button className="btn btn-sm btn-light">
-                    <Edit size={18} />
-                  </button>
-                </td>
+        <div className="table-responsive">
+          <table className="table table-hover shadow-sm">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentProductos.map((producto) => (
+                <tr key={producto.id}>
+                  <td>{producto.nombre}</td>
+                  <td>{producto.precio}</td>
+                  <td>{producto.cantidad}</td>
+                  <td>{producto.unidadMedida}</td>
+                  <td>{producto.stock}</td>
+                  <td>
+                    <span className={`badge ${producto.estado ? "bg-success" : "bg-secondary"}`}>
+                      {producto.estado ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td>
+                    <button className="btn btn-sm btn-light">
+                      <Edit size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Paginación */}
-        <div className="d-flex justify-content-center mt-4">
+        <div className="d-flex justify-content-center mt-4 gap-3 align-items-center">
           <button
             className="btn btn-secondary mx-2"
             onClick={() => paginate(currentPage - 1)}
@@ -411,6 +450,7 @@ const GestionProductos = () => {
           </button>
         </div>
 
+        {/* Modales */}
         {showModal && (
           <div className="modal show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
             <div className="modal-dialog modal-dialog-centered">
@@ -423,50 +463,69 @@ const GestionProductos = () => {
                       type="text"
                       name="nombre"
                       placeholder="Nombre"
-                      className="form-control"
+                      className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
                       value={formData.nombre}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('nombre', e.target.value);
+                      }}
                       required
                     />
+                    {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
                   </div>
                   <div className="mb-3">
                     <textarea
                       name="descripcion"
                       placeholder="Descripción"
-                      className="form-control"
+                      className={`form-control ${errores.descripcion ? 'is-invalid' : ''}`}
                       value={formData.descripcion}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('descripcion', e.target.value);
+                      }}
                       required
                     />
+                    {errores.descripcion && <div className="invalid-feedback">{errores.descripcion}</div>}
                   </div>
                   <div className="mb-3">
                     <input
                       type="number"
                       name="precio"
                       placeholder="Precio"
-                      className="form-control"
+                      className={`form-control ${errores.precio ? 'is-invalid' : ''}`}
                       value={formData.precio}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('precio', e.target.value);
+                      }}
                       required
                     />
+                    {errores.precio && <div className="invalid-feedback">{errores.precio}</div>}
                   </div>
                   <div className="mb-3">
                     <input
                       type="number"
                       name="cantidad"
                       placeholder="Cantidad"
-                      className="form-control"
+                      className={`form-control ${errores.cantidad ? 'is-invalid' : ''}`}
                       value={formData.cantidad}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('cantidad', e.target.value);
+                      }}
                       required
                     />
+                    {errores.cantidad && <div className="invalid-feedback">{errores.cantidad}</div>}
                   </div>
                   <div className="mb-3">
                     <select
                       name="unidadMedida"
-                      className="form-control"
+                      className={`form-control ${errores.unidadMedida ? 'is-invalid' : ''}`}
                       value={formData.unidadMedida}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('unidadMedida', e.target.value);
+                      }}
                       required
                     >
                       <option value="">Seleccione unidad</option>
@@ -474,24 +533,32 @@ const GestionProductos = () => {
                       <option value="g">Gramo (g)</option>
                       <option value="ml">militros (ml)</option>
                     </select>
+                    {errores.unidadMedida && <div className="invalid-feedback">{errores.unidadMedida}</div>}
                   </div>
                   <div className="mb-3">
                     <input
                       type="number"
                       name="stock"
                       placeholder="Stock"
-                      className="form-control"
+                      className={`form-control ${errores.stock ? 'is-invalid' : ''}`}
                       value={formData.stock}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('stock', e.target.value);
+                      }}
                       required
                     />
+                    {errores.stock && <div className="invalid-feedback">{errores.stock}</div>}
                   </div>
                   <div className="mb-3">
                     <select
                       name="idCategoria"
-                      className="form-control"
+                      className={`form-control ${errores.idCategoria ? 'is-invalid' : ''}`}
                       value={formData.idCategoria}
-                      onChange={handleCategoriaChange}
+                      onChange={(e) => {
+                        handleCategoriaChange(e);
+                        validateField('idCategoria', e.target.value);
+                      }}
                       required
                     >
                       <option value="">Seleccione una categoría</option>
@@ -501,13 +568,17 @@ const GestionProductos = () => {
                         </option>
                       ))}
                     </select>
+                    {errores.idCategoria && <div className="invalid-feedback">{errores.idCategoria}</div>}
                   </div>
                   <div className="mb-3">
                     <select
                       name="idSubcategoria"
-                      className="form-control"
+                      className={`form-control ${errores.idSubcategoria ? 'is-invalid' : ''}`}
                       value={formData.idSubcategoria}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField('idSubcategoria', e.target.value);
+                      }}
                       required
                       disabled={!selectedCategoria}
                     >
@@ -518,6 +589,7 @@ const GestionProductos = () => {
                         </option>
                       ))}
                     </select>
+                    {errores.idSubcategoria && <div className="invalid-feedback">{errores.idSubcategoria}</div>}
                   </div>
 
                   <div className="mb-3">

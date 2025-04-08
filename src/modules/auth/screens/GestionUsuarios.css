@@ -2,11 +2,15 @@
 .app-container {
   width: 100%;
   min-height: 100vh;
+  display: flex;
 }
 
 .usuarios-container {
+  flex: 1;
+  padding: 20px;
   margin-left: 80px;
   width: calc(100% - 80px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .usuarios-title, .registro-title {

@@ -1,3 +1,4 @@
+/* Sidebar */
 .sidebar {
     background-color: #B03183;
     height: 100vh;
@@ -28,28 +29,29 @@
     position: relative;
 }
 
-.menu-button {
+
+.sidebar-logo {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: background-color 0.2s;
-    position: relative;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
+    background-color: white;
+    padding: 5px;
 }
 
-.menu-button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+.sidebar-title {
+    margin-left: 10px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+
+.menu-button img {
+    display: none;
+}
+
+
+.expanded .menu-button img {
+    display: block;
 }
 
 .logo-container {
@@ -66,20 +68,11 @@
     padding: 0 10px;
 }
 
-.sidebar-logo {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: white;
-    padding: 5px;
+.expanded .sidebar-title {
+    display: block;
 }
 
-.sidebar-title {
-    margin-left: 10px;
-    font-size: 18px;
-    font-weight: 600;
-}
-
+/* Estilo de la barra de menú */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
@@ -128,6 +121,7 @@
     transform: translateY(-50%);
 }
 
+/* Estilos del pie de la sidebar */
 .sidebar-footer {
     padding: 20px 15px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -215,6 +209,7 @@
     border-left: 3px solid white;
     pointer-events: auto;
 }
+
 .logout-button {
     display: flex;
     align-items: center;
@@ -223,9 +218,8 @@
     border: none;
     background-color: transparent;
     color: #ffffff;
-  }
-  
-  .logout-button:hover {
+}
+
+.logout-button:hover {
     background-color: #B03183;
-  }
-  
+}

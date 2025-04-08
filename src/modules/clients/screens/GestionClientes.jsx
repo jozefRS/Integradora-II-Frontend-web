@@ -1,12 +1,14 @@
+"use client"
+
 import { useState, useEffect } from "react"
-import { Edit, Eye, Trash2 } from "lucide-react"
+import { Edit, Eye, RefreshCw } from "lucide-react"
 import "../../../assets/bootstrap/bootstrap.min.css"
 import "./GestionClientes.css"
 import Sidebar from "../../../kernel/components/Sidebar"
 import axios from "axios"
 import RegistrarCliente from "../screens/RegistrarCliente"
 import DetallesCliente from "./DetallesCliente"
-import EditarCliente from './EditarCliente'
+import EditarCliente from "./EditarCliente"
 import Swal from "sweetalert2"
 
 const GestionClientes = () => {
@@ -15,6 +17,9 @@ const GestionClientes = () => {
   const [showDetallesModal, setShowDetallesModal] = useState(false)
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
   const [showEditarModal, setShowEditarModal] = useState(false)
+  const [busqueda, setBusqueda] = useState("")
+  const [paginaActual, setPaginaActual] = useState(1)
+  const clientesPorPagina = 10
 
   useEffect(() => {
     fetchClientes()
@@ -70,7 +75,7 @@ const GestionClientes = () => {
       ciudad: cliente.direccion?.ciudad || "",
       estado: cliente.direccion?.estado || "",
       codigoPostal: cliente.direccion?.codigoPostal || "",
-      activo: true, // Asumimos que está activo si no hay información
+      activo: cliente.activo !== undefined ? cliente.activo : true, // Aseguramos que tenga un valor
     }
 
     setClienteSeleccionado(clienteAdaptado)
@@ -83,51 +88,79 @@ const GestionClientes = () => {
   }
 
   const handleClienteActualizado = (clienteActualizado) => {
-    setClientes(clientes.map(c => 
-      c.id === clienteActualizado.id ? clienteActualizado : c
-    ))
+    setClientes(clientes.map((c) => (c.id === clienteActualizado.id ? clienteActualizado : c)))
   }
 
-  const handleEliminarCliente = (clienteId) => {
-    eliminarCliente(clienteId)
-  }
+  const handleChangeStatus = (cliente) => {
+    const newStatus = !cliente.activo
+    const statusText = newStatus ? "activar" : "desactivar"
 
-  const eliminarCliente = async (clienteId) => {
-    // Mostramos el loader mientras se elimina el cliente
     Swal.fire({
-      title: "Eliminando cliente",
-      text: "Por favor espere...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${statusText} al cliente ${cliente.nombre} ${cliente.apellidoPaterno}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, cambiar estado",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = sessionStorage.getItem("token")
+
+          // Mostramos el loader mientras se procesa
+          Swal.fire({
+            title: "Procesando",
+            text: "Por favor espere...",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
+            },
+          })
+
+          // Realizar la solicitud para cambiar el estado
+          await axios.put(
+            `http://localhost:8080/api/cliente/${cliente.id}/estado`,
+            {
+              activo: newStatus,
+            },
+            {
+              headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+              },
+            },
+          )
+
+          // Actualizamos el estado en la interfaz
+          setClientes(clientes.map((c) => (c.id === cliente.id ? { ...c, activo: newStatus } : c)))
+
+          Swal.fire(
+            "¡Completado!",
+            `El cliente ha sido ${newStatus ? "activado" : "desactivado"} correctamente.`,
+            "success",
+          )
+        } catch (error) {
+          console.error("Error al cambiar el estado del cliente:", error)
+          Swal.fire("Error", "No se pudo cambiar el estado del cliente.", "error")
+        }
+      }
     })
-
-    const token = sessionStorage.getItem("token")
-    try {
-      await axios.delete(`http://localhost:8080/api/cliente/${clienteId}`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      })
-
-      // Actualizamos la lista de clientes
-      setClientes(clientes.filter((cliente) => cliente.id !== clienteId))
-
-      // Cerramos el loader
-      Swal.close()
-    } catch (error) {
-      console.error("Error al eliminar el cliente:", error)
-
-      // Cerramos el loader
-      Swal.close()
-    }
   }
+
+  const clientesFiltrados = clientes.filter((cliente) => {
+    const nombreCompleto = `${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`.toLowerCase()
+    return nombreCompleto.includes(busqueda.toLowerCase())
+  })
+
+  const indexOfLastCliente = paginaActual * clientesPorPagina
+  const indexOfFirstCliente = indexOfLastCliente - clientesPorPagina
+  const clientesPaginados = clientesFiltrados.slice(indexOfFirstCliente, indexOfLastCliente)
 
   return (
     <div className="app-container d-flex w-100 min-vh-100">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
-      <div className="usuarios-container p-4 ms-auto w-100">
+      <div className="clientes-container p-4 w-100">
         <div className="usuarios-header mb-4">
           <h1 className="usuarios-title text-center fw-medium fs-1 mb-2">Gestión De Clientes</h1>
           <div className="usuarios-divider"></div>
@@ -139,6 +172,20 @@ const GestionClientes = () => {
           </button>
         </div>
 
+        {/* Filtro de búsqueda */}
+        <div className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por nombre..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value)
+              setPaginaActual(1) // Reiniciar paginación
+            }}
+          />
+        </div>
+
         <div className="clientes-table-container table-responsive">
           <table className="clientes-table table table-hover shadow-sm">
             <thead>
@@ -147,11 +194,12 @@ const GestionClientes = () => {
                 <th>Correo</th>
                 <th>Teléfonos</th>
                 <th>Dirección</th>
-                <th>Acciones</th>
+                <th>Estado</th>
+                <th className="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {clientes.map((cliente) => (
+              {clientesPaginados.map((cliente) => (
                 <tr key={cliente.id}>
                   <td>{`${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`}</td>
                   <td>{cliente.correo}</td>
@@ -164,7 +212,14 @@ const GestionClientes = () => {
                       : "Sin dirección"}
                   </td>
                   <td>
-                    <div className="d-flex gap-2">
+                    <div
+                      className={`usuario-estado badge ${cliente.activo ? "bg-success" : "bg-secondary"} rounded-pill`}
+                    >
+                      {cliente.activo ? "Activo" : "Inactivo"}
+                    </div>
+                  </td>
+                  <td className="text-center">
+                    <div className="d-flex gap-2 justify-content-center">
                       <button
                         className="btn-ver btn btn-sm btn-info"
                         title="Ver detalles"
@@ -172,18 +227,19 @@ const GestionClientes = () => {
                       >
                         <Eye size={18} />
                       </button>
-                      <button 
-                       className="btn-editar btn btn-sm btn-light" 
-                       title="Editar cliente" 
-                       onClick={() => handleEditarCliente(cliente)}>
+                      <button
+                        className="btn-editar btn btn-sm btn-light"
+                        title="Editar cliente"
+                        onClick={() => handleEditarCliente(cliente)}
+                      >
                         <Edit size={18} />
                       </button>
                       <button
-                        className="btn-eliminar btn btn-sm btn-danger"
-                        title="Eliminar cliente"
-                        onClick={() => handleEliminarCliente(cliente.id)}
+                        className="btn-status btn btn-sm btn-warning"
+                        title="Cambiar estado"
+                        onClick={() => handleChangeStatus(cliente)}
                       >
-                        <Trash2 size={18} />
+                        <RefreshCw size={18} />
                       </button>
                     </div>
                   </td>
@@ -191,6 +247,30 @@ const GestionClientes = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Paginación */}
+        <div className="d-flex justify-content-center mt-4 gap-3 align-items-center">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+          >
+            Anterior
+          </button>
+
+          <span>Página {paginaActual}</span>
+
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const totalPaginas = Math.ceil(clientesFiltrados.length / clientesPorPagina)
+              setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))
+            }}
+            disabled={paginaActual >= Math.ceil(clientesFiltrados.length / clientesPorPagina)}
+          >
+            Siguiente
+          </button>
         </div>
       </div>
 
@@ -274,10 +354,10 @@ const GestionClientes = () => {
       )}
 
       {showEditarModal && clienteSeleccionado && (
-        <EditarCliente 
-        cliente={clienteSeleccionado} 
-        onClose={() => setShowEditarModal(false)}
-        onUpdate={handleClienteActualizado}
+        <EditarCliente
+          cliente={clienteSeleccionado}
+          onClose={() => setShowEditarModal(false)}
+          onUpdate={handleClienteActualizado}
         />
       )}
     </div>
