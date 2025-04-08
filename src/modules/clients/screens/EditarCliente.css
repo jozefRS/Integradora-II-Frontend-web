@@ -1,0 +1,201 @@
+.editar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+  }
+  
+  .editar-modal-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  .editar-close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+  
+  .editar-close-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .editar-modal-title {
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+    font-size: 1.5rem;
+  }
+  
+  .editar-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .editar-form-section {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #f9f9f9;
+  }
+  
+  .editar-section-title {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    color: #444;
+    font-weight: 600;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+  }
+  
+  .editar-form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .editar-form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .editar-form-group label {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 500;
+  }
+  
+  .editar-input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  
+  .editar-input:focus {
+    border-color: #a64d79;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(166, 77, 121, 0.2);
+  }
+  
+  .telefono-row {
+    align-items: center;
+  }
+  
+  .telefono-group {
+    flex: 1;
+  }
+  
+  .btn-remove-telefono {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-top: 24px;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-remove-telefono:hover {
+    background-color: #d32f2f;
+  }
+  
+  .btn-add-telefono {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-add-telefono:hover {
+    background-color: #388e3c;
+  }
+  
+  .editar-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .editar-btn-cancelar {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+  }
+  
+  .editar-btn-cancelar:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .editar-btn-guardar {
+    background-color: #a64d79;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+  }
+  
+  .editar-btn-guardar:hover {
+    background-color: #8e3b68;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .editar-form-row {
+      flex-direction: column;
+      gap: 12px;
+    }
+  
+    .editar-modal-container {
+      width: 95%;
+      padding: 16px;
+    }
+  }
+  

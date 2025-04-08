@@ -1,203 +1,237 @@
-import React, { useState, useEffect } from 'react';
-import { Edit } from 'lucide-react';
-import '../../../assets/bootstrap/bootstrap.min.css';
-import './GestionUsuarios.css';
-import Sidebar from '../../../kernel/components/Sidebar';
-import axios from "axios";
+"use client"
+
+import { useState, useEffect } from "react"
+import { Edit, Eye, Trash2 } from "lucide-react"
+import "../../../assets/bootstrap/bootstrap.min.css"
+import "./GestionUsuarios.css"
+import Sidebar from "../../../kernel/components/Sidebar"
+import axios from "axios"
+import Swal from "sweetalert2" // Importamos SweetAlert2
 
 const GestionUsuarios = () => {
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState([])
 
   useEffect(() => {
     const fetchUsuarios = async () => {
-      const token = sessionStorage.getItem('token');
-      try {
-        const response = await axios.get('http://localhost:8080/api/usuario', {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        });
-        // Filtrar los usuarios para mostrar solo los que son "TRABAJADOR"
-        const trabajadores = response.data.filter(usuario => usuario.rol === "TRABAJADOR");
-        setUsuarios(trabajadores);
-      } catch (error) {
-        console.error('Error al obtener los usuarios:', error);
-        setUsuarios([]);
-      }
-    };
-    fetchUsuarios();
-  }, []);
+      // Mostramos el loader mientras se cargan los usuarios
+      Swal.fire({
+        title: "Cargando usuarios",
+        text: "Por favor espere...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
 
-  const [showModal, setShowModal] = useState(false);
+      const token = sessionStorage.getItem("token")
+      try {
+        const response = await axios.get("http://localhost:8080/api/usuario", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        })
+        // Filtrar los usuarios para mostrar solo los que son "TRABAJADOR"
+        const trabajadores = response.data.filter((usuario) => usuario.rol === "TRABAJADOR")
+        setUsuarios(trabajadores)
+
+        // Cerramos el loader
+        Swal.close()
+      } catch (error) {
+        console.error("Error al obtener los usuarios:", error)
+        setUsuarios([])
+
+        // Cerramos el loader
+        Swal.close()
+      }
+    }
+    fetchUsuarios()
+  }, [])
+
+  const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({
-    nombreCompleto: '',
-    username: '',
-    email: ''
-  });
+    nombreCompleto: "",
+    username: "",
+    email: "",
+  })
 
   const [errors, setErrors] = useState({
-    nombreCompleto: '',
-    username: '',
-    email: '',
-  });
+    nombreCompleto: "",
+    username: "",
+    email: "",
+  })
 
   const [touched, setTouched] = useState({
     nombreCompleto: false,
     username: false,
     email: false,
-  });
+  })
 
-  const [formValid, setFormValid] = useState(false);
+  const [formValid, setFormValid] = useState(false)
 
   useEffect(() => {
-    const isFormValid = Object.values(errors).every(error => error === '') &&
-                        Object.values(formData).every(value => value.trim() !== '');
-    setFormValid(isFormValid);
-  }, [formData, errors]);
+    const isFormValid =
+      Object.values(errors).every((error) => error === "") &&
+      Object.values(formData).every((value) => value.trim() !== "")
+    setFormValid(isFormValid)
+  }, [formData, errors])
 
   const validateField = (name, value) => {
-    let errorMessage = '';
+    let errorMessage = ""
 
     switch (name) {
-      case 'nombreCompleto':
+      case "nombreCompleto":
         if (!value.trim()) {
-          errorMessage = 'El nombre completo es requerido';
+          errorMessage = "El nombre completo es requerido"
         } else if (value.trim().length < 3) {
-          errorMessage = 'El nombre debe tener al menos 3 caracteres';
+          errorMessage = "El nombre debe tener al menos 3 caracteres"
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
-          errorMessage = 'El nombre solo debe contener letras';
+          errorMessage = "El nombre solo debe contener letras"
         }
-        break;
-      
-      case 'username':
+        break
+
+      case "username":
         if (!value.trim()) {
-          errorMessage = 'El nombre de usuario es requerido';
+          errorMessage = "El nombre de usuario es requerido"
         } else if (value.trim().length < 4) {
-          errorMessage = 'El nombre de usuario debe tener al menos 4 caracteres';
+          errorMessage = "El nombre de usuario debe tener al menos 4 caracteres"
         } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-          errorMessage = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+          errorMessage = "El nombre de usuario solo puede contener letras, números y guiones bajos"
         }
-        break;
-      
-      case 'email':
+        break
+
+      case "email":
         if (!value.trim()) {
-          errorMessage = 'El correo electrónico es requerido';
+          errorMessage = "El correo electrónico es requerido"
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          errorMessage = 'Ingrese un correo electrónico válido';
+          errorMessage = "Ingrese un correo electrónico válido"
         }
-        break;
+        break
     }
 
-    return errorMessage;
-  };
+    return errorMessage
+  }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: value
-    });
-    
+      [name]: value,
+    })
+
     if (touched[name]) {
       setErrors({
         ...errors,
-        [name]: validateField(name, value)
-      });
+        [name]: validateField(name, value),
+      })
     }
-  };
+  }
 
   const handleBlur = (e) => {
-    const { name, value } = e.target;
-    
+    const { name, value } = e.target
+
     setTouched({
       ...touched,
-      [name]: true
-    });
-    
+      [name]: true,
+    })
+
     setErrors({
       ...errors,
-      [name]: validateField(name, value)
-    });
-  };
+      [name]: validateField(name, value),
+    })
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-  
+    e.preventDefault()
+
     // Marcar todos los campos como "touched" para activar la validación
-    const allTouched = Object.keys(touched).reduce((acc, field) => ({
-      ...acc,
-      [field]: true
-    }), {});
-    setTouched(allTouched);
-  
+    const allTouched = Object.keys(touched).reduce(
+      (acc, field) => ({
+        ...acc,
+        [field]: true,
+      }),
+      {},
+    )
+    setTouched(allTouched)
+
     // Validar los campos antes de enviar
-    const newErrors = {};
+    const newErrors = {}
     Object.entries(formData).forEach(([name, value]) => {
-      newErrors[name] = validateField(name, value);
-    });
-    setErrors(newErrors);
-  
-    const hasErrors = Object.values(newErrors).some(error => error !== '' );
-  
+      newErrors[name] = validateField(name, value)
+    })
+    setErrors(newErrors)
+
+    const hasErrors = Object.values(newErrors).some((error) => error !== "")
+
     if (!hasErrors) {
+      // Mostramos el loader mientras se registra el usuario
+      Swal.fire({
+        title: "Registrando usuario",
+        text: "Por favor espere...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
+
       try {
-        const token = sessionStorage.getItem('token');
-        const response = await axios.post(
-          'http://localhost:8080/api/usuario/registrar-trabajador',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: token ? `Bearer ${token}` : '', // Agregar autenticación si es necesario
-            },
-          }
-        );
-  
+        const token = sessionStorage.getItem("token")
+        const response = await axios.post("http://localhost:8080/api/usuario/registrar-trabajador", formData, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "", // Agregar autenticación si es necesario
+          },
+        })
+
+        // Cerramos el loader
+        Swal.close()
+
         // Actualizar la lista de usuarios después del registro
-        setUsuarios([...usuarios, response.data]);
-  
+        setUsuarios([...usuarios, response.data])
+
         // Cerrar el modal y limpiar el formulario
-        setShowModal(false);
+        setShowModal(false)
         setFormData({
-          nombreCompleto: '',
-          username: '',
-          email: '',
-        });
+          nombreCompleto: "",
+          username: "",
+          email: "",
+        })
         setErrors({
-          nombreCompleto: '',
-          username: '',
-          email: '',
-        });
+          nombreCompleto: "",
+          username: "",
+          email: "",
+        })
         setTouched({
           nombreCompleto: false,
           username: false,
           email: false,
-        });
-  
+        })
       } catch (error) {
-        console.error('Error al registrar el usuario:', error);
+        console.error("Error al registrar el usuario:", error)
+
+        // Cerramos el loader
+        Swal.close()
       }
     }
-  };
+  }
 
   const handleCloseModal = () => {
-    setShowModal(false);
+    setShowModal(false)
     setFormData({
-      nombreCompleto: '',
-      username: '',
-      email: '',
-    });
+      nombreCompleto: "",
+      username: "",
+      email: "",
+    })
     setErrors({
-      nombreCompleto: '',
-      username: '',
-      email: '',
-    });
+      nombreCompleto: "",
+      username: "",
+      email: "",
+    })
     setTouched({
       nombreCompleto: false,
       username: false,
       email: false,
-    });
-  };
+    })
+  }
 
   return (
     <div className="app-container d-flex w-100 min-vh-100">
@@ -222,7 +256,7 @@ const GestionUsuarios = () => {
                 <th>Email</th>
                 <th>Rol</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <th className="text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -232,14 +266,24 @@ const GestionUsuarios = () => {
                   <td>{usuario.email}</td>
                   <td>{usuario.rol}</td>
                   <td>
-                    <div className={`usuario-estado badge ${usuario.activo ? 'bg-success' : 'bg-secondary'} rounded-pill`}>
-                      {usuario.activo ? 'Activo' : 'Inactivo'}
+                    <div
+                      className={`usuario-estado badge ${usuario.activo ? "bg-success" : "bg-secondary"} rounded-pill`}
+                    >
+                      {usuario.activo ? "Activo" : "Inactivo"}
                     </div>
                   </td>
-                  <td>
-                    <button className="btn-editar btn btn-sm btn-light">
-                      <Edit size={18} />
-                    </button>
+                  <td className="text-center">
+                    <div className="d-flex gap-2 justify-content-center">
+                      <button className="btn-ver btn btn-sm btn-info" title="Ver detalles">
+                        <Eye size={18} />
+                      </button>
+                      <button className="btn-editar btn btn-sm btn-light" title="Editar usuario">
+                        <Edit size={18} />
+                      </button>
+                      <button className="btn-eliminar btn btn-sm btn-danger" title="Eliminar usuario">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -249,10 +293,8 @@ const GestionUsuarios = () => {
       </div>
 
       {/* Modal de Registro */}
-      {showModal && (
-        <div className="modal-backdrop show"></div>
-      )}
-      <div className={`modal ${showModal ? 'show d-block' : ''}`} tabIndex="-1">
+      {showModal && <div className="modal-backdrop show"></div>}
+      <div className={`modal ${showModal ? "show d-block" : ""}`} tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header border-0">
@@ -264,7 +306,9 @@ const GestionUsuarios = () => {
                 <div className="mb-3">
                   <input
                     type="text"
-                    className={`form-control ${touched.nombreCompleto && (errors.nombreCompleto ? 'is-invalid' : 'is-valid')}`}
+                    className={`form-control ${
+                      touched.nombreCompleto && (errors.nombreCompleto ? "is-invalid" : "is-valid")
+                    }`}
                     placeholder="Nombre Completo"
                     name="nombreCompleto"
                     value={formData.nombreCompleto}
@@ -279,37 +323,29 @@ const GestionUsuarios = () => {
                 <div className="mb-3">
                   <input
                     type="text"
-                    className={`form-control ${touched.username && (errors.username ? 'is-invalid' : 'is-valid')}`}
+                    className={`form-control ${touched.username && (errors.username ? "is-invalid" : "is-valid")}`}
                     placeholder="Nombre de usuario"
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
                   />
-                  {touched.username && errors.username && (
-                    <div className="invalid-feedback">{errors.username}</div>
-                  )}
+                  {touched.username && errors.username && <div className="invalid-feedback">{errors.username}</div>}
                 </div>
 
                 <div className="mb-3">
                   <input
                     type="email"
-                    className={`form-control ${touched.email && (errors.email ? 'is-invalid' : 'is-valid')}`}
+                    className={`form-control ${touched.email && (errors.email ? "is-invalid" : "is-valid")}`}
                     placeholder="Correo electrónico"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
                   />
-                  {touched.email && errors.email && (
-                    <div className="invalid-feedback">{errors.email}</div>
-                  )}
+                  {touched.email && errors.email && <div className="invalid-feedback">{errors.email}</div>}
                 </div>
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={!formValid}
-                >
+                <button type="submit" className="btn btn-primary w-100" disabled={!formValid}>
                   Registrar
                 </button>
               </form>
@@ -318,7 +354,7 @@ const GestionUsuarios = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GestionUsuarios;
+export default GestionUsuarios
