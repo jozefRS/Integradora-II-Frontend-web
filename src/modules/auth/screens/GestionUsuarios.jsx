@@ -8,6 +8,11 @@ import axios from "axios";
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
 
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const usuariosPorPagina = 10;
+
+
   useEffect(() => {
     const fetchUsuarios = async () => {
       const token = sessionStorage.getItem('token');
@@ -51,7 +56,7 @@ const GestionUsuarios = () => {
 
   useEffect(() => {
     const isFormValid = Object.values(errors).every(error => error === '') &&
-                        Object.values(formData).every(value => value.trim() !== '');
+      Object.values(formData).every(value => value.trim() !== '');
     setFormValid(isFormValid);
   }, [formData, errors]);
 
@@ -68,7 +73,7 @@ const GestionUsuarios = () => {
           errorMessage = 'El nombre solo debe contener letras';
         }
         break;
-      
+
       case 'username':
         if (!value.trim()) {
           errorMessage = 'El nombre de usuario es requerido';
@@ -78,7 +83,7 @@ const GestionUsuarios = () => {
           errorMessage = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
         }
         break;
-      
+
       case 'email':
         if (!value.trim()) {
           errorMessage = 'El correo electrónico es requerido';
@@ -97,7 +102,7 @@ const GestionUsuarios = () => {
       ...formData,
       [name]: value
     });
-    
+
     if (touched[name]) {
       setErrors({
         ...errors,
@@ -108,12 +113,12 @@ const GestionUsuarios = () => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    
+
     setTouched({
       ...touched,
       [name]: true
     });
-    
+
     setErrors({
       ...errors,
       [name]: validateField(name, value)
@@ -122,23 +127,23 @@ const GestionUsuarios = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Marcar todos los campos como "touched" para activar la validación
     const allTouched = Object.keys(touched).reduce((acc, field) => ({
       ...acc,
       [field]: true
     }), {});
     setTouched(allTouched);
-  
+
     // Validar los campos antes de enviar
     const newErrors = {};
     Object.entries(formData).forEach(([name, value]) => {
       newErrors[name] = validateField(name, value);
     });
     setErrors(newErrors);
-  
-    const hasErrors = Object.values(newErrors).some(error => error !== '' );
-  
+
+    const hasErrors = Object.values(newErrors).some(error => error !== '');
+
     if (!hasErrors) {
       try {
         const token = sessionStorage.getItem('token');
@@ -152,10 +157,10 @@ const GestionUsuarios = () => {
             },
           }
         );
-  
+
         // Actualizar la lista de usuarios después del registro
         setUsuarios([...usuarios, response.data]);
-  
+
         // Cerrar el modal y limpiar el formulario
         setShowModal(false);
         setFormData({
@@ -173,7 +178,7 @@ const GestionUsuarios = () => {
           username: false,
           email: false,
         });
-  
+
       } catch (error) {
         console.error('Error al registrar el usuario:', error);
       }
@@ -199,6 +204,15 @@ const GestionUsuarios = () => {
     });
   };
 
+  const usuariosFiltrados = usuarios.filter((usuario) =>
+    usuario.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  const indexOfLastUsuario = paginaActual * usuariosPorPagina;
+  const indexOfFirstUsuario = indexOfLastUsuario - usuariosPorPagina;
+  const usuariosPaginados = usuariosFiltrados.slice(indexOfFirstUsuario, indexOfLastUsuario);
+
+
   return (
     <div className="app-container d-flex w-100 min-vh-100">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
@@ -213,6 +227,20 @@ const GestionUsuarios = () => {
             Registrar
           </button>
         </div>
+        
+        <div className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por nombre..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1); // Reinicia a la página 1 en cada búsqueda
+            }}
+          />
+        </div>
+
 
         <div className="usuarios-table-container table-responsive">
           <table className="usuarios-table table table-hover shadow-sm">
@@ -226,7 +254,7 @@ const GestionUsuarios = () => {
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((usuario) => (
+              {usuariosPaginados.map((usuario) => (
                 <tr key={usuario.id}>
                   <td>{usuario.nombreCompleto}</td>
                   <td>{usuario.email}</td>
@@ -246,6 +274,29 @@ const GestionUsuarios = () => {
             </tbody>
           </table>
         </div>
+        <div className="d-flex justify-content-center mt-4 gap-3">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+          >
+            Anterior
+          </button>
+
+          <span>Página {paginaActual}</span>
+
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
+              setPaginaActual(prev => Math.min(prev + 1, totalPaginas));
+            }}
+            disabled={paginaActual >= Math.ceil(usuariosFiltrados.length / usuariosPorPagina)}
+          >
+            Siguiente
+          </button>
+        </div>
+
       </div>
 
       {/* Modal de Registro */}

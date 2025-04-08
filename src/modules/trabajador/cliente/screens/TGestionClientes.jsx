@@ -29,6 +29,22 @@ const TGestionClientes = () => {
 
   const [showModal, setShowModal] = useState(false);
 
+  const [busqueda, setBusqueda] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const clientesPorPagina = 10;
+
+  const clientesFiltrados = clientes.filter(cliente => {
+    const nombreCompleto = `${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`.toLowerCase();
+    return nombreCompleto.includes(busqueda.toLowerCase());
+  });
+
+  const indexOfLastCliente = paginaActual * clientesPorPagina;
+  const indexOfFirstCliente = indexOfLastCliente - clientesPorPagina;
+  const clientesPaginados = clientesFiltrados.slice(indexOfFirstCliente, indexOfLastCliente);
+
+
+
+
   return (
     <div className="app-container d-flex w-100 min-vh-100">
       <Sidebar userName="Usuario" userEmail="usuario@example.com" />
@@ -44,6 +60,20 @@ const TGestionClientes = () => {
           </button>
         </div>
 
+        <div className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por nombre..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1); // Reiniciar paginación
+            }}
+          />
+        </div>
+
+
         <div className="clientes-table-container table-responsive">
           <table className="clientes-table table table-hover shadow-sm">
             <thead>
@@ -56,7 +86,7 @@ const TGestionClientes = () => {
               </tr>
             </thead>
             <tbody>
-              {clientes.map((cliente) => (
+              {clientesPaginados.map((cliente) => (
                 <tr key={cliente.id}>
                   <td>{`${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`}</td>
                   <td>{cliente.correo}</td>
@@ -76,62 +106,85 @@ const TGestionClientes = () => {
             </tbody>
           </table>
         </div>
+        <div className="d-flex justify-content-center mt-4 gap-3">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+          >
+            Anterior
+          </button>
+
+          <span>Página {paginaActual}</span>
+
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              const totalPaginas = Math.ceil(clientesFiltrados.length / clientesPorPagina);
+              setPaginaActual(prev => Math.min(prev + 1, totalPaginas));
+            }}
+            disabled={paginaActual >= Math.ceil(clientesFiltrados.length / clientesPorPagina)}
+          >
+            Siguiente
+          </button>
+        </div>
+
       </div>
 
       {/* Modal de Registro */}
       {showModal && (
         <RegistrarCliente
-        onClose={() => setShowModal(false)}
-        onSubmit={async (data) => {
-          try {
-            const token = sessionStorage.getItem('token');
-      
-            const clienteAdaptado = {
-              nombre: data.nombre,
-              apellidoPaterno: data.apellidoPaterno,
-              apellidoMaterno: data.apellidoMaterno,
-              correo: data.email,
-              telefono: data.telefonos,
-              direccion: {
-                calle: data.calle,
-                numero: data.numero,
-                colonia: data.colonia,
-                ciudad: data.ciudad,
-                estado: data.estado,
-                codigoPostal: data.codigoPostal
-              }
-            };
-      
-            const response = await axios.post(
-              'http://localhost:8080/api/cliente',
-              clienteAdaptado,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: token ? `Bearer ${token}` : '',
-                },
-              }
-            );
-      
-            const nuevoCliente = response.data?.body?.data;
-      
-            if (nuevoCliente) {
-              setClientes(prev => [
-                ...prev,
-                {
-                  ...nuevoCliente,
-                  telefono: Array.isArray(nuevoCliente.telefono) ? nuevoCliente.telefono : [],
-                  direccion: nuevoCliente.direccion || {}
+          onClose={() => setShowModal(false)}
+          onSubmit={async (data) => {
+            try {
+              const token = sessionStorage.getItem('token');
+
+              const clienteAdaptado = {
+                nombre: data.nombre,
+                apellidoPaterno: data.apellidoPaterno,
+                apellidoMaterno: data.apellidoMaterno,
+                correo: data.email,
+                telefono: data.telefonos,
+                direccion: {
+                  calle: data.calle,
+                  numero: data.numero,
+                  colonia: data.colonia,
+                  ciudad: data.ciudad,
+                  estado: data.estado,
+                  codigoPostal: data.codigoPostal
                 }
-              ]);
+              };
+
+              const response = await axios.post(
+                'http://localhost:8080/api/cliente',
+                clienteAdaptado,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token ? `Bearer ${token}` : '',
+                  },
+                }
+              );
+
+              const nuevoCliente = response.data?.body?.data;
+
+              if (nuevoCliente) {
+                setClientes(prev => [
+                  ...prev,
+                  {
+                    ...nuevoCliente,
+                    telefono: Array.isArray(nuevoCliente.telefono) ? nuevoCliente.telefono : [],
+                    direccion: nuevoCliente.direccion || {}
+                  }
+                ]);
+              }
+
+              setShowModal(false);
+            } catch (error) {
+              console.error('Error al registrar el cliente:', error);
             }
-      
-            setShowModal(false);
-          } catch (error) {
-            console.error('Error al registrar el cliente:', error);
-          }
-        }}
-      />
+          }}
+        />
       )}
     </div>
   );

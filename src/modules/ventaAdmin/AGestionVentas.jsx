@@ -18,11 +18,16 @@ const AGestionVentas = () => {
     const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
 
 
-
     const [productosSeleccionados, setProductosSeleccionados] = useState([]);
     const [busquedaProducto, setBusquedaProducto] = useState("");
     const [aplicarIVA, setAplicarIVA] = useState(false);
     const IVA_PORCENTAJE = 16;
+
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [ventasPorPagina] = useState(10); // Puedes ajustar este valor
+    const [busquedaCliente, setBusquedaCliente] = useState('');
+
+
 
     useEffect(() => {
         fetchVentas();
@@ -101,6 +106,25 @@ const AGestionVentas = () => {
         producto.nombre.toLowerCase().includes(busquedaProducto.toLowerCase())
     );
 
+    const ventasFiltradas = ventas.filter((venta) => {
+        const cliente = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
+        if (!cliente) return false;
+
+        const nombreCompleto = `
+            ${cliente.nombre || ''} 
+            ${cliente.apellidoPaterno || ''} 
+            ${cliente.apellidoMaterno || ''}
+        `.toLowerCase().trim();
+
+        return nombreCompleto.includes(busquedaCliente.toLowerCase().trim());
+    });
+
+    const ventasPaginadas = ventasFiltradas.slice(
+        (paginaActual - 1) * ventasPorPagina,
+        paginaActual * ventasPorPagina
+    );
+
+
     const agregarProducto = (producto) => {
         const productoExistente = productosSeleccionados.find((p) => p.id === producto.id);
         if (productoExistente) {
@@ -133,12 +157,26 @@ const AGestionVentas = () => {
             <div className="content-container">
                 <h1 className="text-center text-purple mb-3">Gestión de ventas</h1>
                 <hr className="mb-4" />
-
+                {/* 
                 <div className="d-flex justify-content-end mb-4">
                     <button className="btn btn-purple" onClick={handleOpenRegistroModal}>
                         Registrar
                     </button>
+                </div> */}
+
+                <div className="mb-3">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Buscar por nombre de cliente..."
+                        value={busquedaCliente}
+                        onChange={(e) => {
+                            setBusquedaCliente(e.target.value);
+                            setPaginaActual(1); // Reiniciar a la primera página en cada búsqueda
+                        }}
+                    />
                 </div>
+
 
                 <div className="table-responsive">
                     <table className="table">
@@ -154,7 +192,7 @@ const AGestionVentas = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {ventas.map((venta) => {
+                            {ventasPaginadas.map((venta) => {
                                 const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
 
                                 return (
@@ -186,6 +224,29 @@ const AGestionVentas = () => {
                             })}
                         </tbody>
                     </table>
+                    <div className="d-flex justify-content-center mt-4 gap-3">
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+                            disabled={paginaActual === 1}
+                        >
+                            Anterior
+                        </button>
+
+                        <span>Página {paginaActual}</span>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                                const totalPaginas = Math.ceil(ventasFiltradas.length / ventasPorPagina);
+                                setPaginaActual(prev => Math.min(prev + 1, totalPaginas));
+                            }}
+                            disabled={paginaActual >= Math.ceil(ventasFiltradas.length / ventasPorPagina)}
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+
                 </div>
             </div>
 

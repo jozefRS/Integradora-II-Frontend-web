@@ -31,6 +31,11 @@ const GestionVentas = () => {
     const [errores, setErrores] = useState({});
     const [submitted, setSubmitted] = useState(false); // Para validación post-envio
 
+    const [busquedaCliente, setBusquedaCliente] = useState('');
+    const [paginaActual, setPaginaActual] = useState(1);
+    const ventasPorPagina = 10; // Puedes ajustar este número
+
+
 
     useEffect(() => {
         fetchVentas();
@@ -389,6 +394,19 @@ const GestionVentas = () => {
         }
     };
 
+    const ventasFiltradas = ventas.filter((venta) => {
+        const cliente = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
+        if (!cliente) return false;
+
+        const nombreCompleto = `${cliente.nombre || ''} ${cliente.apellidoPaterno || ''} ${cliente.apellidoMaterno || ''}`.toLowerCase();
+        return nombreCompleto.includes(busquedaCliente.toLowerCase());
+    });
+
+
+    const ventasPaginadas = ventasFiltradas.slice(
+        (paginaActual - 1) * ventasPorPagina,
+        paginaActual * ventasPorPagina
+    );
 
 
     return (
@@ -404,6 +422,18 @@ const GestionVentas = () => {
                     </button>
                 </div>
 
+                <div className="mb-3">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Buscar por cliente..."
+                        value={busquedaCliente}
+                        onChange={(e) => {
+                            setBusquedaCliente(e.target.value);
+                            setPaginaActual(1); // Reinicia a la primera página al buscar
+                        }}
+                    />
+                </div>
 
                 <table className="table table-hover shadow-sm">
                     <thead>
@@ -418,7 +448,7 @@ const GestionVentas = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {ventas.map((venta) => {
+                        {ventasPaginadas.map((venta) => {
                             const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
 
                             return (
@@ -485,6 +515,28 @@ const GestionVentas = () => {
                         })}
                     </tbody>
                 </table>
+                <div className="d-flex justify-content-center mt-4 gap-3">
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+                        disabled={paginaActual === 1}
+                    >
+                        Anterior
+                    </button>
+
+                    <span>Página {paginaActual}</span>
+
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => {
+                            const totalPaginas = Math.ceil(ventasFiltradas.length / ventasPorPagina);
+                            setPaginaActual(prev => Math.min(prev + 1, totalPaginas));
+                        }}
+                        disabled={paginaActual >= Math.ceil(ventasFiltradas.length / ventasPorPagina)}
+                    >
+                        Siguiente
+                    </button>
+                </div>
 
             </div>
             {mostrarModalEnvio && (
