@@ -12,7 +12,7 @@ const AGestionVentas = () => {
     const [catalogoProductos, setCatalogoProductos] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [tipoPago, setTipoPago] = useState("");
-const [tipoEntrega, setTipoEntrega] = useState("");
+    const [tipoEntrega, setTipoEntrega] = useState("");
     const [tipoDeEntrega, setTipoDeEntrega] = useState("");
     const [tipoDePago, setTipoDePago] = useState("");
     const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
@@ -33,22 +33,22 @@ const [tipoEntrega, setTipoEntrega] = useState("");
     const fetchVentas = async () => {
         const token = sessionStorage.getItem("token");
         const idUsuario = sessionStorage.getItem("idUsuario");
-    
+
         try {
             const response = await axios.get(`http://localhost:8080/api/ventas`, {
                 headers: {
                     Authorization: token ? `Bearer ${token}` : "",
                 },
             });
-    
+
             console.log("Ventas obtenidas:", response.data);  // Log para ver las ventas
             setVentas(response.data.body?.data || response.data || []);
         } catch (error) {
             console.error("Error al obtener las ventas del trabajador: ", error);
         }
     };
-    
-    
+
+
 
     const fetchProductos = async () => {
         const token = sessionStorage.getItem("token");
@@ -77,7 +77,7 @@ const [tipoEntrega, setTipoEntrega] = useState("");
             console.error("Error al obtener los clientes: ", error);
         }
     };
-    
+
 
     const handleOpenRegistroModal = () => {
         setProductosSeleccionados([]);
@@ -124,8 +124,8 @@ const [tipoEntrega, setTipoEntrega] = useState("");
         setProductosSeleccionados(productosSeleccionados.filter((p) => p.id !== productoId));
     };
 
-   
-    
+
+
 
     return (
         <div className="gestion-ventas-container">
@@ -142,54 +142,54 @@ const [tipoEntrega, setTipoEntrega] = useState("");
 
                 <div className="table-responsive">
                     <table className="table">
-                    <thead>
-  <tr>
-    <th>Cliente</th>
-    <th>Tipo de pago</th>
-    <th>Tipo de entrega</th>
-    <th>Total</th>
-    <th>Pagado</th> {/* ✅ nuevo */}
-    <th>Enviado</th> {/* ✅ nuevo */}
-    <th>Acciones</th>
-  </tr>
-</thead>
-<tbody>
-  {ventas.map((venta) => {
-    const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Tipo de pago</th>
+                                <th>Tipo de entrega</th>
+                                <th>Total</th>
+                                <th>Pagado</th> {/* ✅ nuevo */}
+                                <th>Enviado</th> {/* ✅ nuevo */}
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ventas.map((venta) => {
+                                const clienteEncontrado = clientes.find(c => c.id === venta.idCliente || c.id === venta.cliente?.id);
 
-    return (
-      <tr key={venta.id}>
-        <td>
-          {clienteEncontrado
-            ? `${clienteEncontrado.nombre} ${clienteEncontrado.apellidoPaterno} ${clienteEncontrado.apellidoMaterno}`
-            : "Sin datos"}
-        </td>
-        <td>{venta.tipoDePago}</td>
-        <td>{venta.tipoDeEntrega}</td>
-        <td>${venta.total}</td>
-        <td>{venta.pagado ? "Sí" : "No"}</td>
-        <td>{venta.enviado ? "Sí" : "No"}</td>
-        <td className="d-flex flex-column gap-1">
-          {!venta.pagado && (
-            <button className="btn btn-sm btn-warning" onClick={() => handleSubirEvidenciaPago(venta.id)}>
-              Subir pago
-            </button>
-          )}
-          {!venta.enviado && (
-            <button className="btn btn-sm btn-info" onClick={() => handleSubirEvidenciaEnvio(venta.id)}>
-              Subir envío
-            </button>
-          )}
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+                                return (
+                                    <tr key={venta.id}>
+                                        <td>
+                                            {clienteEncontrado
+                                                ? `${clienteEncontrado.nombre} ${clienteEncontrado.apellidoPaterno} ${clienteEncontrado.apellidoMaterno}`
+                                                : "Sin datos"}
+                                        </td>
+                                        <td>{venta.tipoDePago}</td>
+                                        <td>{venta.tipoDeEntrega}</td>
+                                        <td>${venta.total}</td>
+                                        <td>{venta.pagado ? "Sí" : "No"}</td>
+                                        <td>{venta.enviado ? "Sí" : "No"}</td>
+                                        <td className="d-flex flex-column gap-1">
+                                            {!venta.pagado && (
+                                                <button className="btn btn-sm btn-warning" onClick={() => handleSubirEvidenciaPago(venta.id)}>
+                                                    Subir pago
+                                                </button>
+                                            )}
+                                            {!venta.enviado && (
+                                                <button className="btn btn-sm btn-info" onClick={() => handleSubirEvidenciaEnvio(venta.id)}>
+                                                    Subir envío
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
                     </table>
                 </div>
             </div>
 
-           
+
         </div>
     );
 };

@@ -7,6 +7,7 @@ import "./GestionVentas.css"; // Asegúrate de importar después de Bootstrap pa
 import imageCompression from "browser-image-compression";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ventaSchema } from '../../../utils/validationForm';
 
 
 const GestionVentas = () => {
@@ -15,11 +16,9 @@ const GestionVentas = () => {
     const [ventas, setVentas] = useState([]);
     const [catalogoProductos, setCatalogoProductos] = useState([]);
     const [clientes, setClientes] = useState([]);
-    const [tipoPago, setTipoPago] = useState("Efectivo");
-    const [tipoEntrega, setTipoEntrega] = useState("Físico (en tienda)");
-    const [tipoDeEntrega, setTipoDeEntrega] = useState("Físico (en tienda)");
-    const [tipoDePago, setTipoDePago] = useState("Efectivo");
-    const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+    const [tipoPago, setTipoPago] = useState('');
+    const [tipoEntrega, setTipoEntrega] = useState('');
+    const [clienteSeleccionado, setClienteSeleccionado] = useState('');
     const [imagenEnvio, setImagenEnvio] = useState(null);
     const [productosSeleccionados, setProductosSeleccionados] = useState([]);
     const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
@@ -29,6 +28,8 @@ const GestionVentas = () => {
     const [aplicarIVA, setAplicarIVA] = useState(false);
     const IVA_PORCENTAJE = 16;
     const [mostrarModalVisualizacion, setMostrarModalVisualizacion] = useState(false);
+    const [errores, setErrores] = useState({});
+    const [submitted, setSubmitted] = useState(false); // Para validación post-envio
 
 
     useEffect(() => {
@@ -135,9 +136,6 @@ const GestionVentas = () => {
         }
     };
 
-
-
-
     const fetchProductos = async () => {
         const token = sessionStorage.getItem("token");
         try {
@@ -166,7 +164,6 @@ const GestionVentas = () => {
         }
     };
 
-
     const handleOpenRegistroModal = () => {
         setProductosSeleccionados([]);
         setAplicarIVA(false);
@@ -194,7 +191,6 @@ const GestionVentas = () => {
         }
     };
 
-
     const handleCloseDetalleVentaModal = () => {
         setShowDetalleVentaModal(false);
     };
@@ -214,12 +210,14 @@ const GestionVentas = () => {
                 return p;
             });
             setProductosSeleccionados(nuevosProductos);
+            if (submitted) validateField('productos', nuevosProductos);
         } else {
             setProductosSeleccionados([
                 ...productosSeleccionados,
                 { ...producto, cantidad: 1, total: producto.precio },
             ]);
         }
+
     };
     const handleImageEnvioChange = (e) => {
         const file = e.target.files[0];
@@ -319,6 +317,37 @@ const GestionVentas = () => {
 
     const calcularTotal = () => {
         return calcularSubtotal() + calcularIVA();
+    };
+
+    const validarYRegistrarVenta = async () => {
+        setSubmitted(true);
+        try {
+            const ventaParaValidar = {
+                cliente: clienteSeleccionado,
+                tipoPago,
+                tipoEntrega,
+                productos: productosSeleccionados,
+            };
+
+            await ventaSchema.validate(ventaParaValidar, { abortEarly: false });
+            setErrores({});
+            registrarVenta();
+        } catch (error) {
+            const nuevosErrores = {};
+            error.inner.forEach(e => {
+                nuevosErrores[e.path] = e.message;
+            });
+            setErrores(nuevosErrores);
+        }
+    };
+
+    const validateField = async (fieldName, value) => {
+        try {
+            await ventaSchema.validateAt(fieldName, { [fieldName]: value });
+            setErrores(prev => ({ ...prev, [fieldName]: undefined }));
+        } catch (error) {
+            setErrores(prev => ({ ...prev, [fieldName]: error.message }));
+        }
     };
 
     const registrarVenta = async () => {
@@ -574,13 +603,24 @@ const GestionVentas = () => {
                                         <div className="col-md-6">
                                             <div className="form-group mb-3">
                                                 <label className="text-purple mb-2">Cliente</label>
-                                                <select className="form-select" onChange={(e) => setClienteSeleccionado(e.target.value)}>
+                                                <select
+                                                    className={`form-select ${errores.cliente ? 'is-invalid' : ''}`}
+                                                    onChange={(e) => {
+                                                        setClienteSeleccionado(e.target.value);
+                                                        if (submitted) validateField('cliente', e.target.value);
+                                                    }}
+                                                    value={clienteSeleccionado}
+                                                >
+                                                    <option value="">Seleccionar cliente</option>
                                                     {clientes.map((cliente) => (
                                                         <option key={cliente.id} value={cliente.id}>
-                                                            {cliente.nombre + " " + cliente.apellidoPaterno + " " + cliente.apellidoMaterno}
+                                                            {`${cliente.nombre} ${cliente.apellidoPaterno} ${cliente.apellidoMaterno}`}
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {errores.cliente && (
+                                                    <div className="invalid-feedback">{errores.cliente}</div>
+                                                )}
 
                                             </div>
                                         </div>
@@ -589,19 +629,42 @@ const GestionVentas = () => {
                                     <div className="row mb-3">
                                         <div className="col-md-6">
                                             <label className="text-purple mb-2">Tipo de pago</label>
-                                            <select className="form-select" value={tipoPago} onChange={(e) => setTipoPago(e.target.value)}>
+                                            <select
+                                                className={`form-select ${errores.tipoPago ? 'is-invalid' : ''}`}
+                                                onChange={(e) => {
+                                                    setTipoPago(e.target.value);
+                                                    if (submitted) validateField('tipoPago', e.target.value);
+                                                }}
+                                                value={tipoPago}
+                                            >
+                                                <option value="">Seleccionar</option>
                                                 <option value="efectivo">Efectivo</option>
                                                 <option value="tarjeta">Tarjeta</option>
                                                 <option value="transferencia">Transferencia</option>
                                             </select>
+                                            {errores.tipoPago && (
+                                                <div className="invalid-feedback">{errores.tipoPago}</div>
+                                            )}
                                         </div>
                                         <div className="col-md-6">
                                             <label className="text-purple mb-2">Tipo de entrega</label>
-                                            <select className="form-select" value={tipoEntrega} onChange={(e) => setTipoEntrega(e.target.value)}>
+                                            <select
+                                                className={`form-select ${errores.tipoEntrega ? 'is-invalid' : ''}`}
+                                                onChange={(e) => {
+                                                    setTipoEntrega(e.target.value);
+                                                    if (submitted) validateField('tipoEntrega', e.target.value);
+                                                }}
+                                                value={tipoEntrega}
+                                            >
+                                                <option value="">Seleccionar</option>
                                                 <option value="fisico">Físico (en tienda)</option>
                                                 <option value="domicilio">Domicilio</option>
                                                 <option value="paqueteria">Paquetería</option>
                                             </select>
+                                            {errores.tipoEntrega && (
+                                                <div className="invalid-feedback">{errores.tipoEntrega}</div>
+                                            )}
+
                                         </div>
                                     </div>
 
@@ -661,6 +724,7 @@ const GestionVentas = () => {
                                                     )}
                                                 </tbody>
                                             </table>
+
                                         </div>
                                     </div>
 
@@ -702,13 +766,11 @@ const GestionVentas = () => {
                                                                             style={{ width: "60px", textAlign: "center" }}
                                                                             onChange={(e) => {
                                                                                 const cantidad = parseInt(e.target.value) || 1;
-                                                                                // Limitar la cantidad a la cantidad máxima disponible
-                                                                                const stockMaximo = producto.stock;  // Asegúrate de que 'stock' sea un campo en tu producto
-                                                                                if (cantidad <= stockMaximo) {
-                                                                                    cambiarCantidadProducto(producto.id, cantidad);
-                                                                                } else {
-                                                                                    alert(`Cantidad máxima disponible: ${stockMaximo}`);
+                                                                                if (cantidad > producto.stock) {
+                                                                                    alert(`Solo hay ${producto.stock} unidades disponibles`);
+                                                                                    return;
                                                                                 }
+                                                                                cambiarCantidadProducto(producto.id, cantidad);
                                                                             }}
                                                                             min="1"
                                                                             max={producto.stock}  // Limita la cantidad al stock disponible
@@ -743,6 +805,13 @@ const GestionVentas = () => {
                                                 </tbody>
 
                                             </table>
+                                            <div className="mt-2">
+                                                {errores.productos && (
+                                                    <div className="alert alert-danger text-center">
+                                                        {errores.productos}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Switch IVA */}
@@ -790,9 +859,10 @@ const GestionVentas = () => {
                                     </div>
 
                                     <div className="d-flex justify-content-end gap-2">
-                                        <button className="btn btn-purple" onClick={registrarVenta}>
+                                        <button className="btn btn-purple" onClick={validarYRegistrarVenta}>
                                             Registrar
                                         </button>
+
                                         <button className="btn btn-secondary" onClick={handleCloseRegistroModal}>
                                             Cancelar
                                         </button>

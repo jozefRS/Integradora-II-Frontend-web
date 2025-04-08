@@ -5,6 +5,8 @@ import imageCompression from 'browser-image-compression';
 import '../../../assets/bootstrap/bootstrap.min.css';
 import './GestionProductos.css';
 import Sidebar from '../../../kernel/components/Sidebar';
+import { productoSchema, categoriaSchema, subcategoriaSchema } from '../../../utils/validationForm';
+
 
 const GestionProductos = () => {
   const [categorias, setCategorias] = useState([]);
@@ -24,6 +26,10 @@ const GestionProductos = () => {
     idCategoria: '',
     idSubcategoria: '',
   });
+  const [errores, setErrores] = useState({});
+  const [categoryErrors, setCategoryErrors] = useState({});
+  const [subcategoryErrors, setSubcategoryErrors] = useState({});
+
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [image, setImage] = useState(null);
@@ -125,20 +131,23 @@ const GestionProductos = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const imageUrl = await handleImageUpload();
 
-    if (!imageUrl) {
-      alert("Por favor sube una imagen.");
-      return;
-    }
-
-    const productData = {
-      ...formData,
-      imagen: imageUrl,
-    };
-
-    const token = sessionStorage.getItem('token');
     try {
+      await productoSchema.validate(formData, { abortEarly: false });
+      setErrores({}); // limpiar errores si pasa la validación
+
+      const imageUrl = await handleImageUpload();
+      if (!imageUrl) {
+        alert("Por favor sube una imagen.");
+        return;
+      }
+
+      const productData = {
+        ...formData,
+        imagen: imageUrl,
+      };
+
+      const token = sessionStorage.getItem('token');
       await axios.post('http://localhost:8080/api/producto', productData, {
         headers: {
           'Content-Type': 'application/json',
@@ -160,15 +169,37 @@ const GestionProductos = () => {
       });
       fetchProductos();
     } catch (error) {
-      console.error('Error al registrar producto:', error.response?.data || error.message);
-      alert(error.response?.data?.mensaje || 'Error al registrar el producto.');
+      if (error.inner) {
+        const nuevosErrores = {};
+        error.inner.forEach(e => {
+          nuevosErrores[e.path] = e.message;
+        });
+        setErrores(nuevosErrores);
+      } else {
+        alert(error.message);
+      }
     }
   };
 
-  const handleCategorySubmit = async (e) => {
-    e.preventDefault(); // evitar recarga
-    const token = getToken();
+  const validateField = async (fieldName, value) => {
     try {
+      await productoSchema.validateAt(fieldName, { ...formData, [fieldName]: value });
+      setErrores((prev) => ({ ...prev, [fieldName]: undefined }));
+    } catch (error) {
+      setErrores((prev) => ({ ...prev, [fieldName]: error.message }));
+    }
+  };
+
+
+
+  const handleCategorySubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await categoriaSchema.validate({ newCategoryName }, { abortEarly: false });
+      setCategoryErrors({}); // limpio errores
+
+      const token = getToken();
       const response = await axios.post(
         'http://localhost:8080/api/categoria',
         { nombre: newCategoryName },
@@ -177,43 +208,50 @@ const GestionProductos = () => {
 
       const nuevaCategoria = response.data.body.data;
       setCategorias([...categorias, nuevaCategoria]);
-      setSelectedCategoria(nuevaCategoria.id); // seleccionar la nueva
+      setSelectedCategoria(nuevaCategoria.id);
       setNewCategoryName('');
     } catch (error) {
-      console.error('Error al agregar categoría:', error);
+      const errors = {};
+      error.inner.forEach(err => {
+        errors[err.path] = err.message;
+      });
+      setCategoryErrors(errors);
     }
   };
+
 
   const handleSubcategorySubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedCategoria || !newSubcategoryName) {
-      alert("Selecciona una categoría y proporciona un nombre para la subcategoría.");
-      return;
-    }
-
-    const token = getToken();
     try {
-      const response = await axios.put(
+      await subcategoriaSchema.validate({ selectedCategoria, newSubcategoryName }, { abortEarly: false });
+      setSubcategoryErrors({});
+
+      const token = getToken();
+      await axios.put(
         `http://localhost:8080/api/categoria/${selectedCategoria}/subcategoria`,
         { nombre: newSubcategoryName },
         { headers: { Authorization: token ? `Bearer ${token}` : '' } }
       );
 
-      // Actualizar las subcategorías de la categoría seleccionada
       const subResponse = await axios.get(
         `http://localhost:8080/api/categoria/${selectedCategoria}/subcategorias`,
         { headers: { Authorization: token ? `Bearer ${token}` : '' } }
       );
 
-      setSubcategorias(subResponse.data || []); // Actualiza la lista de subcategorías
-      setNewSubcategoryName(''); // Limpia el campo de nombre de subcategoría
+      setSubcategorias(subResponse.data || []);
+      setNewSubcategoryName('');
       alert("Subcategoría agregada correctamente!");
     } catch (error) {
-      console.error('Error al agregar subcategoría:', error);
-      alert("Hubo un error al agregar la subcategoría.");
+      const errors = {};
+      error.inner.forEach(err => {
+        errors[err.path] = err.message;
+      });
+      setSubcategoryErrors(errors);
     }
   };
+
+
 
   // Filtrar productos por nombre
   const filteredProductos = productos.filter(producto =>
@@ -317,107 +355,116 @@ const GestionProductos = () => {
                 <h2 className="fw-medium text-center w-100">Registro de Producto</h2>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
                 <form onSubmit={handleSubmit} noValidate>
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      name="nombre"
-                      placeholder="Nombre"
-                      className="form-control"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <textarea
-                      name="descripcion"
-                      placeholder="Descripción"
-                      className="form-control"
-                      value={formData.descripcion}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <input
-                      type="number"
-                      name="precio"
-                      placeholder="Precio"
-                      className="form-control"
-                      value={formData.precio}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <input
-                      type="number"
-                      name="cantidad"
-                      placeholder="Cantidad"
-                      className="form-control"
-                      value={formData.cantidad}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+                  {[
+                    { name: "nombre", placeholder: "Nombre", type: "text" },
+                    { name: "descripcion", placeholder: "Descripción", type: "textarea" },
+                    { name: "precio", placeholder: "Precio", type: "number" },
+                    { name: "cantidad", placeholder: "Cantidad", type: "number" },
+                    { name: "stock", placeholder: "Stock", type: "number" },
+                  ].map(({ name, placeholder, type }) => (
+                    <div className="mb-3" key={name}>
+                      {type === "textarea" ? (
+                        <textarea
+                          name={name}
+                          placeholder={placeholder}
+                          className={`form-control ${errores[name] ? "is-invalid" : ""}`}
+                          value={formData[name]}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            validateField(name, e.target.value);
+                          }}
+                          onBlur={(e) => validateField(name, e.target.value)}
+                        />
+                      ) : (
+                        <input
+                          type={type}
+                          name={name}
+                          placeholder={placeholder}
+                          className={`form-control ${errores[name] ? "is-invalid" : ""}`}
+                          value={formData[name]}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            validateField(name, e.target.value);
+                          }}
+                          onBlur={(e) => validateField(name, e.target.value)}
+                        />
+                      )}
+                      {errores[name] && <div className="invalid-feedback">{errores[name]}</div>}
+                    </div>
+                  ))}
+
+                  {/* Unidad de medida */}
                   <div className="mb-3">
                     <select
                       name="unidadMedida"
-                      className="form-control"
+                      className={`form-control ${errores.unidadMedida ? "is-invalid" : ""}`}
                       value={formData.unidadMedida}
-                      onChange={handleInputChange}
-                      required
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField("unidadMedida", e.target.value);
+                      }}
+                      onBlur={(e) => validateField("unidadMedida", e.target.value)}
                     >
                       <option value="">Seleccione unidad</option>
                       <option value="mg">miligramo (mg)</option>
                       <option value="g">Gramo (g)</option>
-                      <option value="ml">militros (ml)</option>
-
+                      <option value="ml">mililitros (ml)</option>
                     </select>
+                    {errores.unidadMedida && <div className="invalid-feedback">{errores.unidadMedida}</div>}
                   </div>
-                  <div className="mb-3">
-                    <input
-                      type="number"
-                      name="stock"
-                      placeholder="Stock"
-                      className="form-control"
-                      value={formData.stock}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+
+                  {/* Categoría */}
                   <div className="mb-3">
                     <select
                       name="idCategoria"
-                      className="form-control"
+                      className={`form-control ${errores.idCategoria ? "is-invalid" : ""}`}
                       value={formData.idCategoria}
-                      onChange={handleCategoriaChange}
-                      required
+                      onChange={(e) => {
+                        handleCategoriaChange(e);
+                        validateField("idCategoria", e.target.value);
+                      }}
+                      onBlur={(e) => validateField("idCategoria", e.target.value)}
                     >
                       <option value="">Seleccione una categoría</option>
-                      {categorias.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                      {categorias.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.nombre}
+                        </option>
                       ))}
                     </select>
+                    {errores.idCategoria && <div className="invalid-feedback">{errores.idCategoria}</div>}
                   </div>
+
+                  {/* Subcategoría */}
                   <div className="mb-3">
                     <select
                       name="idSubcategoria"
-                      className="form-control"
+                      className={`form-control ${errores.idSubcategoria ? "is-invalid" : ""}`}
                       value={formData.idSubcategoria}
-                      onChange={handleInputChange}
-                      required
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        validateField("idSubcategoria", e.target.value);
+                      }}
+                      onBlur={(e) => validateField("idSubcategoria", e.target.value)}
                       disabled={!selectedCategoria}
                     >
                       <option value="">Seleccione una subcategoría</option>
-                      {subcategorias.map(sub => (
-                        <option key={sub.id} value={sub.id}>{sub.nombre}</option>
+                      {subcategorias.map((sub) => (
+                        <option key={sub.id} value={sub.id}>
+                          {sub.nombre}
+                        </option>
                       ))}
                     </select>
+                    {errores.idSubcategoria && (
+                      <div className="invalid-feedback">{errores.idSubcategoria}</div>
+                    )}
                   </div>
 
+                  {/* Imagen */}
                   <div className="mb-3">
-                    <label htmlFor="image" className="form-label">Imagen del producto</label>
+                    <label htmlFor="image" className="form-label">
+                      Imagen del producto
+                    </label>
                     <input
                       type="file"
                       className="form-control"
@@ -445,6 +492,7 @@ const GestionProductos = () => {
           </div>
         )}
 
+
         {/* Modal para crear categoría/subcategoría */}
         {showCategoryModal && (
           <div className="modal show d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -458,11 +506,18 @@ const GestionProductos = () => {
                     <h5>Crear nueva categoría</h5>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${categoryErrors.newCategoryName ? 'is-invalid' : ''}`}
                       placeholder="Nombre de nueva categoría"
                       value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onChange={(e) => {
+                        setNewCategoryName(e.target.value);
+                        setCategoryErrors({}); // limpiar en tiempo real
+                      }}
                     />
+                    {categoryErrors.newCategoryName && (
+                      <div className="invalid-feedback">{categoryErrors.newCategoryName}</div>
+                    )}
+
                     <button className="btn btn-primary mt-2" onClick={handleCategorySubmit}>
                       Crear Categoría
                     </button>
@@ -474,10 +529,11 @@ const GestionProductos = () => {
                   <div className="mb-3">
                     <h5>Selecciona una categoría para agregar subcategorías</h5>
                     <select
-                      className="form-select"
+                      className={`form-select ${subcategoryErrors.selectedCategoria ? 'is-invalid' : ''}`}
                       value={selectedCategoria}
                       onChange={(e) => {
                         setSelectedCategoria(e.target.value);
+                        setSubcategoryErrors({ ...subcategoryErrors, selectedCategoria: '' });
                         // Cargar subcategorías al seleccionar una categoría
                         const token = getToken();
                         axios
@@ -495,6 +551,9 @@ const GestionProductos = () => {
                         </option>
                       ))}
                     </select>
+                    {subcategoryErrors.selectedCategoria && (
+                      <div className="invalid-feedback">{subcategoryErrors.selectedCategoria}</div>
+                    )}
                   </div>
 
                   {selectedCategoria && (
@@ -515,13 +574,21 @@ const GestionProductos = () => {
 
                       {/* Agregar nueva subcategoría */}
                       <div className="mb-3">
+                        {/* Input subcategoría */}
                         <input
                           type="text"
-                          className="form-control"
+                          className={`form-control ${subcategoryErrors.newSubcategoryName ? 'is-invalid' : ''}`}
                           placeholder="Nombre nueva subcategoría"
                           value={newSubcategoryName}
-                          onChange={(e) => setNewSubcategoryName(e.target.value)}
+                          onChange={(e) => {
+                            setNewSubcategoryName(e.target.value);
+                            setSubcategoryErrors({ ...subcategoryErrors, newSubcategoryName: '' });
+                          }}
                         />
+                        {subcategoryErrors.newSubcategoryName && (
+                          <div className="invalid-feedback">{subcategoryErrors.newSubcategoryName}</div>
+                        )}
+
                         <button className="btn btn-primary mt-2" onClick={handleSubcategorySubmit}>
                           Agregar Subcategoría
                         </button>

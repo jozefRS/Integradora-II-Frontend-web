@@ -119,3 +119,47 @@ export const ciudadValidation = Yup.string()
 
 export const estadoValidation = Yup.string()
   .required('El estado es obligatorio');
+
+
+// ✅ Validación para una venta (usando validaciones genéricas)
+// validationForm.js
+export const ventaSchema = Yup.object().shape({
+  cliente: Yup.string().required('Seleccione un cliente'),
+  tipoPago: Yup.string().required('Seleccione tipo de pago'),
+  tipoEntrega: Yup.string().required('Seleccione tipo de entrega'),
+  productos: Yup.array()
+    .min(1, 'Debe agregar al menos un producto')
+    .of(
+      Yup.object().shape({
+        id: Yup.string().required(),
+        cantidad: Yup.number().min(1, 'Cantidad mínima: 1')
+      })
+    )
+});
+
+export const productoSchema = Yup.object().shape({
+  nombre: Yup.string().required('El nombre es obligatorio'),
+  descripcion: Yup.string().required('La descripción es obligatoria'),
+  precio: Yup.number().typeError('Debe ser un número').positive('Debe ser mayor que cero').required('El precio es obligatorio'),
+  cantidad: Yup.number().typeError('Debe ser un número').positive('Debe ser mayor que cero').required('La cantidad es obligatoria'),
+  unidadMedida: Yup.string().required('La unidad de medida es obligatoria'),
+  stock: Yup.number().typeError('Debe ser un número').min(0, 'Debe ser cero o mayor').required('El stock es obligatorio'),
+  idCategoria: Yup.string().required('Selecciona una categoría'),
+  idSubcategoria: Yup.string().required('Selecciona una subcategoría'),
+});
+
+export const categoriaSchema = Yup.object().shape({
+  newCategoryName: Yup.string()
+    .trim()
+    .required('El nombre de la categoría es obligatorio')
+    .min(3, 'Debe tener al menos 3 caracteres'),
+});
+
+export const subcategoriaSchema = Yup.object().shape({
+  selectedCategoria: Yup.string()
+    .required('Selecciona una categoría'),
+  newSubcategoryName: Yup.string()
+    .trim()
+    .required('El nombre de la subcategoría es obligatorio')
+    .min(3, 'Debe tener al menos 3 caracteres'),
+});
